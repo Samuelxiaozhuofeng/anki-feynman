@@ -1,0 +1,49 @@
+{
+    "ai_service": {
+        "provider": "openai",
+        "openai": {
+            "api_key": "",
+            "model": "gpt-3.5-turbo",
+            "max_tokens": 2000,
+            "temperature": 0.7,
+            "request_timeout": 180
+        },
+        "custom": {
+            "api_url": "",
+            "api_key": "",
+            "model": "",
+            "max_tokens": 2000,
+            "temperature": 0.7,
+            "request_timeout": 180
+        }
+    },
+    "ui": {
+        "theme": "default",
+        "language": "en_US",
+        "window_size": {
+            "width": 800,
+            "height": 600
+        }
+    },
+    "deck": {
+        "default_deck": "费曼学习::默认",
+        "error_deck": "费曼学习::错题集",
+        "tags": [
+            "feynman-learning"
+        ]
+    },
+    "models": [],
+    "last_selections": {
+        "deck": "",
+        "question_type": "",
+        "template": "",
+        "num_questions": 5,
+        "model": "",
+        "followup_model": ""
+    },
+    "pdf_library": {
+        "pdfs": [],
+        "storage_path": "",
+        "max_cache_size_mb": 100
+    }
+}

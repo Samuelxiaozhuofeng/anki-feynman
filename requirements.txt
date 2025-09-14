@@ -1,0 +1,12 @@
+# 需要安装到vendor目录的外部依赖
+openai==0.28.0
+aiohttp>=3.8.0
+async-timeout>=4.0.0
+requests>=2.20
+tqdm>=4.0
+pypdf>=3.0.0
+
+# Anki已提供的依赖（不需要安装）
+# PyQt6>=6.4.0
+# aqt>=2.1.50
+# anki>=2.1.50
