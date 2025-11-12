@@ -45,12 +45,16 @@ class QuestionController:
             # 创建或更新知识卡窗口（知识卡和语言学习知识卡都使用同一个窗口）
             if not hasattr(self, 'knowledge_dialog') or self.knowledge_dialog is None:
                 self.knowledge_dialog = KnowledgeCardWindow(questions, parent=self.dialog)
-                # 传递追加提问模型
+                # 传递追加提问模型和AI处理器
                 self.knowledge_dialog.followup_model = selected_followup_model
+                self.knowledge_dialog.followup_panel.set_followup_model(selected_followup_model)
+                # 设置追问处理器
+                self.knowledge_dialog._setup_followup_handler()
             else:
                 # 更新现有窗口的内容和追加提问模型
                 self.knowledge_dialog.update_cards(questions)
                 self.knowledge_dialog.followup_model = selected_followup_model
+                self.knowledge_dialog.followup_panel.set_followup_model(selected_followup_model)
             self.knowledge_dialog.show()
             
             # 将窗口移动到输入窗口旁边
