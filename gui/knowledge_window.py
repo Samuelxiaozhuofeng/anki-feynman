@@ -2,10 +2,10 @@
 知识卡片窗口模块（重构版）
 提供知识卡片的查看、导航、追问和保存功能
 """
-from aqt.qt import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QTextEdit
+from aqt.qt import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QTextEdit, QShortcut, QKeySequence
 from PyQt6.QtCore import Qt
 from aqt import mw
-from aqt.utils import showInfo, showWarning
+from aqt.utils import showInfo, showWarning, tooltip
 
 from ..lang.messages import get_message, get_default_lang
 from ..utils.note_types import (
@@ -36,9 +36,11 @@ class KnowledgeCardWindow(QDialog):
         self.parent_dialog = parent
         self.followup_model = None
         self.ai_handler = None
+        self.added_cards = set()  # 记录已添加的卡片索引
 
         self._setup_ui()
         self._setup_connections()
+        self._setup_shortcuts()
         self._show_current_card()
 
     def _setup_ui(self):
@@ -95,6 +97,20 @@ class KnowledgeCardWindow(QDialog):
         self.followup_panel.create_cloze_card.connect(self._make_cloze_card_from_history)
         self.followup_panel.history_updated.connect(self._on_history_updated)
 
+    def _setup_shortcuts(self):
+        """设置键盘快捷键"""
+        # 左箭头：上一张卡片
+        self.shortcut_prev = QShortcut(QKeySequence(Qt.Key.Key_Left), self)
+        self.shortcut_prev.activated.connect(self._show_prev_card)
+
+        # 右箭头：下一张卡片
+        self.shortcut_next = QShortcut(QKeySequence(Qt.Key.Key_Right), self)
+        self.shortcut_next.activated.connect(self._show_next_card)
+
+        # 空格：添加卡片到Anki
+        self.shortcut_add = QShortcut(QKeySequence(Qt.Key.Key_Space), self)
+        self.shortcut_add.activated.connect(self._add_to_anki_with_shortcut)
+
     def _show_current_card(self):
         """显示当前卡片"""
         if not self.cards or not self.cards.get('cards'):
@@ -108,6 +124,9 @@ class KnowledgeCardWindow(QDialog):
 
         # 更新卡片查看组件
         self.card_viewer.display_card(current_card)
+
+        # 更新卡片状态显示
+        self._update_card_status()
 
     def _show_prev_card(self):
         """显示上一张卡片"""
@@ -148,9 +167,21 @@ class KnowledgeCardWindow(QDialog):
 
         preview_dialog.exec()
 
-    def _add_to_anki(self):
-        """添加当前卡片到Anki"""
+    def _add_to_anki(self, auto_advance=False):
+        """
+        添加当前卡片到Anki
+
+        Args:
+            auto_advance: 是否在添加成功后自动跳转到下一张卡片
+        """
         if not self.cards or not self.cards.get('cards'):
+            return
+
+        # 检查是否已添加
+        if self.current_index in self.added_cards:
+            tooltip(get_message("card_already_added", self.lang), period=1000, parent=self)
+            if auto_advance:
+                self._show_next_card()
             return
 
         try:
@@ -184,10 +215,33 @@ class KnowledgeCardWindow(QDialog):
             mw.col.add_note(note, did)
             mw.col.save()
 
-            showInfo(get_message("knowledge_card_added", self.lang))
+            # 标记为已添加
+            self.added_cards.add(self.current_index)
+
+            # 更新导航显示（如果需要显示已添加状态）
+            self._update_card_status()
+
+            # 使用tooltip代替showInfo，不阻塞用户操作
+            tooltip(get_message("knowledge_card_added", self.lang), period=1000, parent=self)
+
+            # 如果是自动前进模式，跳转到下一张卡片
+            if auto_advance:
+                self._show_next_card()
 
         except Exception as e:
             showWarning(f"{get_message('knowledge_card_add_error', self.lang)}{str(e)}")
+
+    def _add_to_anki_with_shortcut(self):
+        """通过快捷键添加卡片（自动跳转到下一张）"""
+        self._add_to_anki(auto_advance=True)
+
+    def _update_card_status(self):
+        """更新卡片状态显示"""
+        # 更新按钮文本以显示已添加状态
+        if self.current_index in self.added_cards:
+            self.add_button.setText(get_message("card_added_status", self.lang))
+        else:
+            self.add_button.setText(get_message("add_to_anki_btn", self.lang))
 
     def _convert_to_cloze(self):
         """将当前卡片转换为填空题"""
