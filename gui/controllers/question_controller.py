@@ -40,8 +40,9 @@ class QuestionController:
 
         # 根据问题类型创建不同的窗口
         question_type = self.dialog.ui.questionTypeComboBox.currentText()
-        if question_type == get_message("question_type_knowledge", self.dialog.lang):
-            # 创建或更新知识卡窗口
+        if question_type == get_message("question_type_knowledge", self.dialog.lang) or \
+           question_type == get_message("question_type_language_learning", self.dialog.lang):
+            # 创建或更新知识卡窗口（知识卡和语言学习知识卡都使用同一个窗口）
             if not hasattr(self, 'knowledge_dialog') or self.knowledge_dialog is None:
                 self.knowledge_dialog = KnowledgeCardWindow(questions, parent=self.dialog)
                 # 传递追加提问模型

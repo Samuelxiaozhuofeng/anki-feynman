@@ -45,18 +45,22 @@ JSON格式要求（非常重要）：
 {content}
 """
 
-def get_essay_prompt(content: str, num_questions: int = 3) -> str:
+def get_essay_prompt(content: str, num_questions: int = 3, language: str = "中文") -> str:
     """
     格式化问答题提示模板
 
     Args:
         content: 输入的学习内容
         num_questions: 要生成的问答题数量
+        language: 生成内容使用的语言
 
     Returns:
         格式化后的提示文本
     """
-    return ESSAY_QUESTION_PROMPT.format(
+    # 添加语言指示
+    language_instruction = f"请使用{language}生成所有问题、参考答案、关键点和源内容。\n\n"
+    
+    return language_instruction + ESSAY_QUESTION_PROMPT.format(
         content=content,
         num_questions=num_questions
     ) 

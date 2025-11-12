@@ -35,6 +35,11 @@ class SettingsDialog(QDialog):
         self.setupModelsTab()
         self.tabWidget.addTab(self.modelsTab, get_message("model_management", self.lang))
         
+        # 创建额外设置标签页
+        self.advancedTab = QWidget()
+        self.setupAdvancedTab()
+        self.tabWidget.addTab(self.advancedTab, get_message("advanced_settings", self.lang))
+        
         layout.addWidget(self.tabWidget)
         
         # 按钮区域
@@ -214,6 +219,295 @@ class SettingsDialog(QDialog):
         # 连接API设置选择信号
         self.useDefaultApiCheck.toggled.connect(self.on_api_setting_changed)
 
+    def setupAdvancedTab(self):
+        """设置额外设置标签页"""
+        layout = QVBoxLayout(self.advancedTab)
+        
+        # 并发处理组
+        concurrentGroup = QGroupBox(get_message("concurrent_processing", self.lang))
+        concurrentLayout = QVBoxLayout()
+        
+        # 启用并发处理
+        self.enableConcurrentCheck = QCheckBox(get_message("enable_concurrent", self.lang))
+        self.enableConcurrentCheck.setToolTip(get_message("concurrent_desc", self.lang))
+        concurrentLayout.addWidget(self.enableConcurrentCheck)
+        
+        # 最大并发请求数
+        concurrentFormLayout = QFormLayout()
+        self.maxConcurrentSpinBox = QSpinBox()
+        self.maxConcurrentSpinBox.setRange(1, 10)
+        self.maxConcurrentSpinBox.setValue(3)
+        self.maxConcurrentSpinBox.setToolTip(get_message("concurrent_desc", self.lang))
+        concurrentFormLayout.addRow(
+            get_message("max_concurrent_requests", self.lang) + ":",
+            self.maxConcurrentSpinBox
+        )
+        concurrentLayout.addLayout(concurrentFormLayout)
+        
+        # 说明标签
+        concurrentDescLabel = QLabel(get_message("concurrent_desc", self.lang))
+        concurrentDescLabel.setWordWrap(True)
+        concurrentDescLabel.setStyleSheet("color: gray; font-size: 10px;")
+        concurrentLayout.addWidget(concurrentDescLabel)
+        
+        concurrentGroup.setLayout(concurrentLayout)
+        layout.addWidget(concurrentGroup)
+        
+        # 文本分块组
+        chunkingGroup = QGroupBox(get_message("text_chunking", self.lang))
+        chunkingLayout = QVBoxLayout()
+        
+        # 启用文本分块
+        self.enableChunkingCheck = QCheckBox(get_message("enable_chunking", self.lang))
+        self.enableChunkingCheck.setToolTip(get_message("chunking_desc", self.lang))
+        chunkingLayout.addWidget(self.enableChunkingCheck)
+        
+        # 分块参数
+        chunkingFormLayout = QFormLayout()
+        
+        # 分块大小
+        self.chunkSizeSpinBox = QSpinBox()
+        self.chunkSizeSpinBox.setRange(500, 8000)
+        self.chunkSizeSpinBox.setValue(2000)
+        self.chunkSizeSpinBox.setSuffix(" " + get_message("chunk_size_desc", self.lang).split("。")[0].split("characters")[0].strip())
+        self.chunkSizeSpinBox.setToolTip(get_message("chunk_size_desc", self.lang))
+        chunkingFormLayout.addRow(
+            get_message("chunk_size", self.lang) + ":",
+            self.chunkSizeSpinBox
+        )
+        
+        # 重叠字符数
+        self.chunkOverlapSpinBox = QSpinBox()
+        self.chunkOverlapSpinBox.setRange(0, 1000)
+        self.chunkOverlapSpinBox.setValue(200)
+        self.chunkOverlapSpinBox.setToolTip(get_message("chunk_overlap_desc", self.lang))
+        chunkingFormLayout.addRow(
+            get_message("chunk_overlap", self.lang) + ":",
+            self.chunkOverlapSpinBox
+        )
+        
+        # 分块策略
+        self.chunkStrategyCombo = QComboBox()
+        self.chunkStrategyCombo.addItem(get_message("chunk_strategy_simple", self.lang), "simple")
+        self.chunkStrategyCombo.addItem(get_message("chunk_strategy_smart", self.lang), "smart")
+        self.chunkStrategyCombo.setCurrentIndex(1)  # 默认智能分块
+        chunkingFormLayout.addRow(
+            get_message("chunk_strategy", self.lang) + ":",
+            self.chunkStrategyCombo
+        )
+        
+        chunkingLayout.addLayout(chunkingFormLayout)
+        
+        # 说明标签
+        chunkingDescLabel = QLabel(get_message("chunking_desc", self.lang))
+        chunkingDescLabel.setWordWrap(True)
+        chunkingDescLabel.setStyleSheet("color: gray; font-size: 10px;")
+        chunkingLayout.addWidget(chunkingDescLabel)
+        
+        chunkingGroup.setLayout(chunkingLayout)
+        layout.addWidget(chunkingGroup)
+        
+        # 模型特定设置组
+        modelSpecificGroup = QGroupBox(get_message("model_specific_settings", self.lang))
+        modelSpecificLayout = QVBoxLayout()
+        
+        # 说明标签
+        modelSpecificDescLabel = QLabel(get_message("model_specific_settings_desc", self.lang))
+        modelSpecificDescLabel.setWordWrap(True)
+        modelSpecificDescLabel.setStyleSheet("color: gray; font-size: 10px; margin-bottom: 10px;")
+        modelSpecificLayout.addWidget(modelSpecificDescLabel)
+        
+        # 模型选择和设置编辑区域
+        editLayout = QFormLayout()
+        
+        # 模型选择下拉框
+        self.modelSelectCombo = QComboBox()
+        editLayout.addRow(get_message("select_model_for_settings", self.lang) + ":", self.modelSelectCombo)
+        
+        # 启用模型特定设置复选框
+        self.useModelSpecificCheck = QCheckBox(get_message("use_model_specific", self.lang))
+        editLayout.addRow("", self.useModelSpecificCheck)
+        
+        # 该模型的并发请求数
+        self.modelConcurrentSpinBox = QSpinBox()
+        self.modelConcurrentSpinBox.setRange(1, 10)
+        self.modelConcurrentSpinBox.setValue(3)
+        self.modelConcurrentSpinBox.setEnabled(False)
+        editLayout.addRow(get_message("model_concurrent_requests", self.lang) + ":", self.modelConcurrentSpinBox)
+        
+        # 该模型的分块大小
+        self.modelChunkSizeSpinBox = QSpinBox()
+        self.modelChunkSizeSpinBox.setRange(500, 8000)
+        self.modelChunkSizeSpinBox.setValue(2000)
+        self.modelChunkSizeSpinBox.setEnabled(False)
+        editLayout.addRow(get_message("model_chunk_size", self.lang) + ":", self.modelChunkSizeSpinBox)
+        
+        modelSpecificLayout.addLayout(editLayout)
+        
+        # 按钮区域
+        modelSpecificButtonLayout = QHBoxLayout()
+        self.saveModelSettingsButton = QPushButton(get_message("save_model_settings", self.lang))
+        self.saveModelSettingsButton.setEnabled(False)
+        self.deleteModelSettingsButton = QPushButton(get_message("delete_model_settings", self.lang))
+        self.deleteModelSettingsButton.setEnabled(False)
+        
+        modelSpecificButtonLayout.addStretch()
+        modelSpecificButtonLayout.addWidget(self.saveModelSettingsButton)
+        modelSpecificButtonLayout.addWidget(self.deleteModelSettingsButton)
+        modelSpecificLayout.addLayout(modelSpecificButtonLayout)
+        
+        # 已配置的模型表格
+        configuredLabel = QLabel(get_message("configured_models", self.lang) + ":")
+        configuredLabel.setStyleSheet("font-weight: bold; margin-top: 10px;")
+        modelSpecificLayout.addWidget(configuredLabel)
+        
+        self.modelSettingsTable = QTableWidget()
+        self.modelSettingsTable.setColumnCount(3)
+        self.modelSettingsTable.setHorizontalHeaderLabels([
+            get_message("model_settings_table_model", self.lang),
+            get_message("model_settings_table_concurrent", self.lang),
+            get_message("model_settings_table_chunk", self.lang)
+        ])
+        self.modelSettingsTable.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.modelSettingsTable.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.modelSettingsTable.setMaximumHeight(150)
+        modelSpecificLayout.addWidget(self.modelSettingsTable)
+        
+        modelSpecificGroup.setLayout(modelSpecificLayout)
+        layout.addWidget(modelSpecificGroup)
+        
+        # 添加弹性空间
+        layout.addStretch()
+        
+        # 连接信号
+        self.enableConcurrentCheck.toggled.connect(self.on_concurrent_toggled)
+        self.enableChunkingCheck.toggled.connect(self.on_chunking_toggled)
+        self.useModelSpecificCheck.toggled.connect(self.on_model_specific_toggled)
+        self.modelSelectCombo.currentTextChanged.connect(self.on_model_selected_for_settings)
+        self.saveModelSettingsButton.clicked.connect(self.save_model_specific_settings)
+        self.deleteModelSettingsButton.clicked.connect(self.delete_model_specific_settings)
+        
+    def on_concurrent_toggled(self, checked):
+        """处理并发开关切换"""
+        self.maxConcurrentSpinBox.setEnabled(checked)
+        
+    def on_chunking_toggled(self, checked):
+        """处理分块开关切换"""
+        self.chunkSizeSpinBox.setEnabled(checked)
+        self.chunkOverlapSpinBox.setEnabled(checked)
+        self.chunkStrategyCombo.setEnabled(checked)
+    
+    def on_model_specific_toggled(self, checked):
+        """处理模型特定设置复选框切换"""
+        self.modelConcurrentSpinBox.setEnabled(checked)
+        self.modelChunkSizeSpinBox.setEnabled(checked)
+        self.saveModelSettingsButton.setEnabled(checked and self.modelSelectCombo.currentText() != "")
+        self.deleteModelSettingsButton.setEnabled(checked and self.modelSelectCombo.currentText() != "")
+    
+    def on_model_selected_for_settings(self, model_name):
+        """当选择模型时，显示该模型的特定设置（如果有）"""
+        if not model_name:
+            self.useModelSpecificCheck.setChecked(False)
+            return
+        
+        # 从配置中获取模型特定设置
+        advanced_config = self.config.get('advanced_settings', {})
+        model_specific_settings = advanced_config.get('model_specific_settings', {})
+        
+        if model_name in model_specific_settings:
+            # 该模型有特定设置，加载它们
+            settings = model_specific_settings[model_name]
+            self.useModelSpecificCheck.setChecked(True)
+            self.modelConcurrentSpinBox.setValue(settings.get('max_concurrent_requests', 3))
+            self.modelChunkSizeSpinBox.setValue(settings.get('chunk_size', 2000))
+        else:
+            # 该模型没有特定设置，使用默认值
+            self.useModelSpecificCheck.setChecked(False)
+            self.modelConcurrentSpinBox.setValue(advanced_config.get('max_concurrent_requests', 3))
+            self.modelChunkSizeSpinBox.setValue(advanced_config.get('chunk_size', 2000))
+    
+    def save_model_specific_settings(self):
+        """保存当前选择模型的特定设置"""
+        model_name = self.modelSelectCombo.currentText()
+        if not model_name:
+            showWarning(get_message("no_model_selected", self.lang))
+            return
+        
+        if not self.useModelSpecificCheck.isChecked():
+            showWarning("请先勾选'使用模型特定设置'")
+            return
+        
+        # 获取或初始化model_specific_settings
+        if 'advanced_settings' not in self.config:
+            self.config['advanced_settings'] = {}
+        
+        advanced_config = self.config['advanced_settings']
+        if 'model_specific_settings' not in advanced_config:
+            advanced_config['model_specific_settings'] = {}
+        
+        # 保存设置
+        advanced_config['model_specific_settings'][model_name] = {
+            'max_concurrent_requests': self.modelConcurrentSpinBox.value(),
+            'chunk_size': self.modelChunkSizeSpinBox.value()
+        }
+        
+        # 更新表格显示
+        self.load_model_specific_settings()
+        
+        showInfo(get_message("model_settings_saved", self.lang))
+    
+    def delete_model_specific_settings(self):
+        """删除选中模型的特定设置"""
+        model_name = self.modelSelectCombo.currentText()
+        if not model_name:
+            showWarning(get_message("no_model_selected", self.lang))
+            return
+        
+        # 从配置中删除
+        advanced_config = self.config.get('advanced_settings', {})
+        model_specific_settings = advanced_config.get('model_specific_settings', {})
+        
+        if model_name in model_specific_settings:
+            del model_specific_settings[model_name]
+            self.useModelSpecificCheck.setChecked(False)
+            self.load_model_specific_settings()
+            showInfo(get_message("model_settings_deleted", self.lang))
+        else:
+            showWarning(f"模型 {model_name} 没有特定设置")
+    
+    def load_model_specific_settings(self):
+        """加载并显示已配置的模型特定设置"""
+        advanced_config = self.config.get('advanced_settings', {})
+        model_specific_settings = advanced_config.get('model_specific_settings', {})
+        
+        # 清空表格
+        self.modelSettingsTable.setRowCount(0)
+        
+        # 填充表格
+        for model_name, settings in model_specific_settings.items():
+            row = self.modelSettingsTable.rowCount()
+            self.modelSettingsTable.insertRow(row)
+            
+            self.modelSettingsTable.setItem(row, 0, QTableWidgetItem(model_name))
+            self.modelSettingsTable.setItem(row, 1, QTableWidgetItem(str(settings.get('max_concurrent_requests', 3))))
+            self.modelSettingsTable.setItem(row, 2, QTableWidgetItem(str(settings.get('chunk_size', 2000))))
+    
+    def update_model_combo_for_settings(self):
+        """更新模型选择下拉框"""
+        current_selection = self.modelSelectCombo.currentText()
+        self.modelSelectCombo.clear()
+        
+        # 获取所有已配置的模型
+        models = self.config.get('models', [])
+        model_names = [model.get('name', '') for model in models if model.get('name')]
+        
+        if model_names:
+            self.modelSelectCombo.addItems(model_names)
+            
+            # 恢复之前的选择（如果还存在）
+            if current_selection in model_names:
+                self.modelSelectCombo.setCurrentText(current_selection)
+
     def on_api_setting_changed(self):
         """处理API设置选择变更"""
         use_default = self.useDefaultApiCheck.isChecked()
@@ -274,8 +568,29 @@ class SettingsDialog(QDialog):
         self.maxTokensSpinBox.setValue(openai_config.get('max_tokens', 2000))
         self.temperatureSpinBox.setValue(openai_config.get('temperature', 0.7))
         
+        # 加载额外设置
+        advanced_config = self.config.get('advanced_settings', {})
+        self.enableConcurrentCheck.setChecked(advanced_config.get('enable_concurrent_processing', False))
+        self.maxConcurrentSpinBox.setValue(advanced_config.get('max_concurrent_requests', 3))
+        self.enableChunkingCheck.setChecked(advanced_config.get('enable_text_chunking', False))
+        self.chunkSizeSpinBox.setValue(advanced_config.get('chunk_size', 2000))
+        self.chunkOverlapSpinBox.setValue(advanced_config.get('chunk_overlap', 200))
+        
+        # 设置分块策略
+        strategy = advanced_config.get('chunk_strategy', 'smart')
+        strategy_index = 0 if strategy == 'simple' else 1
+        self.chunkStrategyCombo.setCurrentIndex(strategy_index)
+        
+        # 触发开关状态更新
+        self.on_concurrent_toggled(self.enableConcurrentCheck.isChecked())
+        self.on_chunking_toggled(self.enableChunkingCheck.isChecked())
+        
         # 加载模型列表
         self.load_models()
+        
+        # 加载模型特定设置
+        self.update_model_combo_for_settings()
+        self.load_model_specific_settings()
 
     def load_models(self):
         """加载模型列表"""
@@ -319,6 +634,25 @@ class SettingsDialog(QDialog):
             if 'name' in model and 'claude' in model['name'].lower():
                 # 为Claude模型设置更长的超时时间
                 model['request_timeout'] = 300
+        
+        # 保存额外设置
+        # 先获取现有的model_specific_settings（如果有的话）
+        existing_model_specific = self.config.get('advanced_settings', {}).get('model_specific_settings', {})
+        
+        config['advanced_settings'] = {
+            'enable_concurrent_processing': self.enableConcurrentCheck.isChecked(),
+            'max_concurrent_requests': self.maxConcurrentSpinBox.value(),
+            'enable_text_chunking': self.enableChunkingCheck.isChecked(),
+            'chunk_size': self.chunkSizeSpinBox.value(),
+            'chunk_overlap': self.chunkOverlapSpinBox.value(),
+            'chunk_strategy': self.chunkStrategyCombo.currentData(),
+            'model_specific_settings': existing_model_specific
+        }
+        
+        # 验证配置
+        if config['advanced_settings']['chunk_overlap'] >= config['advanced_settings']['chunk_size']:
+            showWarning("重叠字符数不能大于或等于分块大小，已自动调整")
+            config['advanced_settings']['chunk_overlap'] = max(0, config['advanced_settings']['chunk_size'] - 100)
         
         # 保存配置
         mw.addonManager.writeConfig(__name__, config)
@@ -456,9 +790,24 @@ class SettingsDialog(QDialog):
         models = self.config.get('models', [])
         
         if row < len(models):
+            # 获取被删除的模型名称
+            deleted_model_name = models[row].get('name', '')
+            
+            # 删除模型
             del models[row]
             self.config['models'] = models
             self.load_models()
+            
+            # 更新模型选择下拉框
+            self.update_model_combo_for_settings()
+            
+            # 如果该模型有特定设置，也删除它们
+            if deleted_model_name:
+                advanced_config = self.config.get('advanced_settings', {})
+                model_specific_settings = advanced_config.get('model_specific_settings', {})
+                if deleted_model_name in model_specific_settings:
+                    del model_specific_settings[deleted_model_name]
+                    self.load_model_specific_settings()
 
     def save_model(self):
         """保存模型设置"""
@@ -507,6 +856,9 @@ class SettingsDialog(QDialog):
         
         # 刷新表格
         self.load_models()
+        
+        # 更新模型选择下拉框（用于模型特定设置）
+        self.update_model_combo_for_settings()
         
         # 隐藏编辑区域
         self.modelEditGroup.setVisible(False)

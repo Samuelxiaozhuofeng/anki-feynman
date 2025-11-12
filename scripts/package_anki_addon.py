@@ -24,7 +24,11 @@ from __future__ import annotations
 import argparse
 import fnmatch
 import os
+import shutil
+import stat
+import subprocess
 import sys
+import tempfile
 import time
 import zipfile
 from pathlib import Path
@@ -39,6 +43,7 @@ DEFAULT_EXCLUDES = [
     "venv", ".venv", "env", ".env",
     # Node/build artifacts
     "node_modules", "dist", "build",
+    "vendor.backup-*", "vendor-build-*",
     # OS junk
     ".DS_Store", "Thumbs.db", "desktop.ini",
     # Compiled/python/object files
@@ -153,6 +158,70 @@ def make_archive(
     return count
 
 
+def sync_dependencies(requirements: Path, vendor_dir: Path) -> None:
+    requirements = requirements.resolve()
+    if not requirements.exists():
+        raise FileNotFoundError(f"Requirements file not found: {requirements}")
+
+    vendor_dir = vendor_dir.resolve()
+
+    def _remove_tree(path: Path) -> None:
+        if not path.exists():
+            return
+        for root, dirs, files in os.walk(path):
+            for name in files:
+                try:
+                    os.chmod(Path(root) / name, stat.S_IWRITE)
+                except OSError:
+                    pass
+            for name in dirs:
+                try:
+                    os.chmod(Path(root) / name, stat.S_IWRITE)
+                except OSError:
+                    pass
+
+        def _handle_remove_readonly(func, path, exc):
+            del exc
+            os.chmod(path, stat.S_IWRITE)
+            func(path)
+
+        shutil.rmtree(path, onerror=_handle_remove_readonly)
+
+    vendor_dir.parent.mkdir(parents=True, exist_ok=True)
+    tmp_dir = Path(tempfile.mkdtemp(prefix="vendor-build-", dir=vendor_dir.parent))
+    backup_dir: Path | None = None
+    try:
+        cmd = [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "--target",
+            str(tmp_dir),
+            "-r",
+            str(requirements),
+        ]
+        print(f"Syncing dependencies via pip: {' '.join(cmd)}")
+        subprocess.check_call(cmd)
+
+        if vendor_dir.exists():
+            backup_dir = Path(tempfile.mkdtemp(prefix="vendor-backup-"))
+            shutil.rmtree(backup_dir, ignore_errors=True)
+            vendor_dir.replace(backup_dir)
+
+        tmp_dir.replace(vendor_dir)
+        tmp_dir = vendor_dir
+    finally:
+        if tmp_dir.exists() and tmp_dir != vendor_dir:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+        if backup_dir and backup_dir.exists():
+            try:
+                _remove_tree(backup_dir)
+            except Exception as exc:  # pragma: no cover - best effort cleanup
+                print(f"Warning: could not remove backup directory {backup_dir}: {exc}", file=sys.stderr)
+
+
 def derive_output_name(name: str | None, version: str | None, fallback: str) -> str:
     base = name or fallback or "addon"
     if version:
@@ -186,6 +255,9 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     parser.add_argument("--no-default-excludes", action="store_true", help="Do not apply the default exclude patterns.")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
     parser.add_argument("--dry-run", action="store_true", help="Show what would be done without writing the archive.")
+    parser.add_argument("--sync-deps", action="store_true", help="Install requirements into the vendor directory before packaging.")
+    parser.add_argument("--requirements", type=Path, default=None, help="Path to requirements file (default: <source>/requirements.txt).")
+    parser.add_argument("--vendor-dir", type=Path, default=None, help="Path to vendor directory for bundled dependencies (default: <source>/vendor).")
     return parser.parse_args(argv)
 
 
@@ -198,6 +270,9 @@ def main(argv: List[str]) -> int:
         return 2
 
     validate_source_is_addon_root(source_dir)
+
+    req_file = (args.requirements or (source_dir / "requirements.txt")).resolve()
+    vendor_dir = (args.vendor_dir or (source_dir / "vendor")).resolve()
 
     # Build excludes
     excludes: List[str] = [] if args.no_default_excludes else list(DEFAULT_EXCLUDES)
@@ -219,15 +294,27 @@ def main(argv: List[str]) -> int:
     if args.verbose:
         print("Source:", source_dir)
         print("Output:", output_file)
+        print("Vendor directory:", vendor_dir)
+        print("Requirements file:", req_file)
         print("Excludes:")
         for p in excludes:
             print("  -", p)
 
+    if args.sync_deps and not args.dry_run:
+        try:
+            sync_dependencies(req_file, vendor_dir)
+        except Exception as exc:  # pragma: no cover - defensive user feedback
+            print(f"Failed to sync dependencies: {exc}", file=sys.stderr)
+            return 3
+    elif args.sync_deps and args.dry_run:
+        print("Skipping dependency sync because --dry-run was requested.")
+
     if args.dry_run:
         # Just list files that would be included
         count = 0
+        source_resolved = source_dir.resolve()
         for fp in iter_files(source_dir, excludes, exclude_under=set()):
-            rel = fp.relative_to(source_dir)
+            rel = fp.relative_to(source_resolved)
             print(rel.as_posix())
             count += 1
         print(f"[dry-run] Would package {count} files into: {output_file}")
@@ -243,4 +330,3 @@ def main(argv: List[str]) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main(sys.argv[1:]))
-

@@ -30,6 +30,8 @@ class InputDialogUI:
         self.templateLabel = None
         self.templateComboBox = None
         self.manageTemplateButton = None
+        self.languageLabel = None
+        self.languageComboBox = None
         self.numQuestionsLabel = None
         self.numQuestionsSpinBox = None
         self.modelLabel = None
@@ -105,6 +107,7 @@ class InputDialogUI:
             get_message("question_type_choice", self.lang),
             get_message("question_type_qa", self.lang),
             get_message("question_type_knowledge", self.lang),
+            get_message("question_type_language_learning", self.lang),
             get_message("question_type_custom", self.lang)  # 添加自定义选项
         ])
         optionsLayout.addWidget(self.questionTypeLabel)
@@ -128,13 +131,31 @@ class InputDialogUI:
         layout.addWidget(self.templateContainer)
         self.templateContainer.hide()  # 初始隐藏
         
+        # 语言选择
+        languageLayout = QHBoxLayout()
+        
+        self.languageLabel = QLabel(get_message("select_language", self.lang))
+        self.languageComboBox = QComboBox()
+        self.languageComboBox.addItems([
+            get_message("language_chinese", self.lang),
+            get_message("language_spanish", self.lang),
+            get_message("language_japanese", self.lang),
+            get_message("language_custom", self.lang)
+        ])
+        
+        languageLayout.addWidget(self.languageLabel)
+        languageLayout.addWidget(self.languageComboBox)
+        languageLayout.addStretch()
+        
+        layout.addLayout(languageLayout)
+        
         # 高级选项
         advancedLayout = QHBoxLayout()
         
         self.numQuestionsLabel = QLabel(get_message("num_questions", self.lang))
         self.numQuestionsSpinBox = QSpinBox()
         self.numQuestionsSpinBox.setMinimum(1)
-        self.numQuestionsSpinBox.setMaximum(20)
+        self.numQuestionsSpinBox.setMaximum(100)
         self.numQuestionsSpinBox.setValue(5)
         advancedLayout.addWidget(self.numQuestionsLabel)
         advancedLayout.addWidget(self.numQuestionsSpinBox)
@@ -185,6 +206,9 @@ class InputDialogUI:
         
         # 设置题集按钮的事件处理
         self.questionSetsButton.clicked.connect(self.on_question_sets_clicked)
+        
+        # 设置语言选择的事件处理
+        self.languageComboBox.currentIndexChanged.connect(self.on_language_changed)
         
         # 将窗口设置为非模态，允许用户同时刷卡
         self.dialog.setWindowModality(Qt.WindowModality.NonModal)
@@ -310,6 +334,38 @@ class InputDialogUI:
         """处理题集管理对话框关闭事件"""
         # 清空窗口引用
         self.question_sets_dialog = None
+    
+    def on_language_changed(self, index):
+        """处理语言选择变更事件"""
+        # 获取选择的语言文本
+        selected_text = self.languageComboBox.currentText()
+        
+        # 检查是否选择了"自定义..."选项
+        custom_language_text = get_message("language_custom", self.lang)
+        if custom_language_text in selected_text:
+            # 弹出输入对话框
+            from aqt.qt import QInputDialog
+            custom_lang, ok = QInputDialog.getText(
+                self.dialog,
+                get_message("custom_language_title", self.lang),
+                get_message("custom_language_prompt", self.lang)
+            )
+            
+            if ok and custom_lang.strip():
+                # 用户输入了自定义语言，保存到ComboBox
+                # 移除"自定义..."选项，添加新的自定义语言选项
+                self.languageComboBox.blockSignals(True)  # 暂时阻止信号，避免递归
+                self.languageComboBox.removeItem(index)
+                self.languageComboBox.insertItem(index, custom_lang.strip())
+                self.languageComboBox.setCurrentIndex(index)
+                # 重新添加"自定义..."选项
+                self.languageComboBox.addItem(get_message("language_custom", self.lang))
+                self.languageComboBox.blockSignals(False)  # 恢复信号
+            else:
+                # 用户取消或未输入，恢复到默认选项
+                self.languageComboBox.blockSignals(True)
+                self.languageComboBox.setCurrentIndex(0)  # 默认选择中文
+                self.languageComboBox.blockSignals(False)
         
     def update_ui_texts(self, lang):
         """更新UI文本"""
@@ -327,12 +383,27 @@ class InputDialogUI:
             get_message("question_type_choice", self.lang),
             get_message("question_type_qa", self.lang),
             get_message("question_type_knowledge", self.lang),
+            get_message("question_type_language_learning", self.lang),
             get_message("question_type_custom", self.lang)
         ])
         self.questionTypeComboBox.setCurrentIndex(current_index)
         
         self.templateLabel.setText(get_message("select_template", self.lang))
         self.manageTemplateButton.setText(get_message("manage_templates", self.lang))
+        self.languageLabel.setText(get_message("select_language", self.lang))
+        
+        # 更新语言选择下拉框选项
+        current_lang_index = self.languageComboBox.currentIndex()
+        self.languageComboBox.clear()
+        self.languageComboBox.addItems([
+            get_message("language_chinese", self.lang),
+            get_message("language_spanish", self.lang),
+            get_message("language_japanese", self.lang),
+            get_message("language_custom", self.lang)
+        ])
+        if current_lang_index >= 0:
+            self.languageComboBox.setCurrentIndex(current_lang_index)
+        
         self.numQuestionsLabel.setText(get_message("num_questions", self.lang))
         self.modelLabel.setText(get_message("select_model", self.lang))
         self.followUpModelLabel.setText(get_message("select_followup_model", self.lang))

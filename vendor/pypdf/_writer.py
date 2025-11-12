@@ -33,7 +33,7 @@ import hashlib
 import re
 import struct
 import uuid
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from io import BytesIO, FileIO, IOBase
 from itertools import compress
 from pathlib import Path
@@ -78,7 +78,7 @@ from .constants import Core as CO
 from .constants import FieldDictionaryAttributes as FA
 from .constants import PageAttributes as PG
 from .constants import TrailerKeys as TK
-from .errors import PyPdfError
+from .errors import PdfReadError, PyPdfError
 from .generic import (
     PAGE_FIT,
     ArrayObject,
@@ -136,7 +136,7 @@ class ObjectDeletionFlag(enum.IntFlag):
 
 
 def _rolling_checksum(stream: BytesIO, blocksize: int = 65536) -> str:
-    hash = hashlib.md5()
+    hash = hashlib.md5(usedforsecurity=False)
     for block in iter(lambda: stream.read(blocksize), b""):
         hash.update(block)
     return hash.hexdigest()
@@ -350,7 +350,7 @@ class PdfWriter(PdfDocCommon):
         return cast(XmpInformation, self.root_object.xmp_metadata)
 
     @xmp_metadata.setter
-    def xmp_metadata(self, value: Optional[XmpInformation]) -> None:
+    def xmp_metadata(self, value: Union[XmpInformation, bytes, None]) -> None:
         """XMP (Extensible Metadata Platform) data."""
         if value is None:
             if "/Metadata" in self.root_object:
@@ -822,8 +822,7 @@ class PdfWriter(PdfDocCommon):
         new_content_data: bytes,
     ) -> None:
         """
-        Combines existing content stream(s) with new content (as bytes),
-        and returns a new single StreamObject.
+        Combines existing content stream(s) with new content (as bytes).
 
         Args:
             page: The page to which the new content data will be added.
@@ -975,7 +974,7 @@ class PdfWriter(PdfDocCommon):
         font_res = dr.get(font_name, None)
         if not is_null_or_none(font_res):
             font_res = cast(DictionaryObject, font_res.get_object())
-            font_subtype, _, font_encoding, font_map = build_char_map_from_dict(
+            _font_subtype, _, font_encoding, font_map = build_char_map_from_dict(
                 200, font_res
             )
             try:  # remove width stored in -1 key
@@ -1063,7 +1062,7 @@ class PdfWriter(PdfDocCommon):
     def update_page_form_field_values(
         self,
         page: Union[PageObject, list[PageObject], None],
-        fields: dict[str, Union[str, list[str], tuple[str, str, float]]],
+        fields: Mapping[str, Union[str, list[str], tuple[str, str, float]]],
         flags: FA.FfBits = FFBITS_NUL,
         auto_regenerate: Optional[bool] = True,
         flatten: bool = False,
@@ -1254,13 +1253,27 @@ class PdfWriter(PdfDocCommon):
         self._root_object = reader.root_object.clone(self)
         self._pages = self._root_object.raw_get("/Pages")
 
-        assert len(self._objects) <= cast(int, reader.trailer["/Size"])  # for pytest
+        if len(self._objects) > cast(int, reader.trailer["/Size"]):
+            if self.strict:
+                raise PdfReadError(
+                    f"Object count {len(self._objects)} exceeds defined trailer size {reader.trailer['/Size']}"
+                )
+            logger_warning(
+                f"Object count {len(self._objects)} exceeds defined trailer size {reader.trailer['/Size']}",
+                __name__
+            )
+
         # must be done here before rewriting
         if self.incremental:
             self._original_hash = [
                 (obj.hash_bin() if obj is not None else 0) for obj in self._objects
             ]
-        self._flatten()
+
+        try:
+            self._flatten()
+        except IndexError:
+            raise PdfReadError("Got index error while flattening.")
+
         assert self.flattened_pages is not None
         for p in self.flattened_pages:
             self._replace_object(cast(IndirectObject, p.indirect_reference).idnum, p)
@@ -2740,7 +2753,7 @@ class PdfWriter(PdfDocCommon):
         if isinstance(fileobj, PdfDocCommon):
             reader = fileobj
         else:
-            stream, encryption_obj = self._create_stream(fileobj)
+            stream, _encryption_obj = self._create_stream(fileobj)
             # Create a new PdfReader instance using the stream
             # (either file or BytesIO or StringIO) created above
             reader = PdfReader(stream, strict=False)  # type: ignore[arg-type]

@@ -60,12 +60,13 @@ def format_history(history: list) -> str:
         formatted += f"答：{item['answer']}\n\n"
     return formatted.strip()
 
-def get_followup_messages(context: Dict[str, Any]) -> list:
+def get_followup_messages(context: Dict[str, Any], language: str = "中文") -> list:
     """
     生成追问处理消息列表
 
     Args:
         context: 上下文信息，包含原始问题、相关内容、用户答案、AI反馈、对话历史和追问内容
+        language: 回答使用的语言
 
     Returns:
         消息列表，包含系统提示和用户提示
@@ -73,8 +74,11 @@ def get_followup_messages(context: Dict[str, Any]) -> list:
     # 格式化对话历史
     formatted_history = format_history(context.get('history', []))
     
+    # 添加语言指示
+    language_instruction = f"请使用{language}回答追问内容。\n\n"
+    
     # 生成提示内容
-    prompt = FOLLOWUP_PROMPT.format(
+    prompt = language_instruction + FOLLOWUP_PROMPT.format(
         original_question=context['original_question'],
         source_content=context['source_content'],
         user_answer=context['user_answer'],

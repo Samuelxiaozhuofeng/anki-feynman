@@ -45,5 +45,14 @@
         "pdfs": [],
         "storage_path": "",
         "max_cache_size_mb": 100
+    },
+    "advanced_settings": {
+        "enable_concurrent_processing": false,
+        "max_concurrent_requests": 3,
+        "enable_text_chunking": false,
+        "chunk_size": 2000,
+        "chunk_overlap": 200,
+        "chunk_strategy": "smart",
+        "model_specific_settings": {}
     }
 }

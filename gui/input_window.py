@@ -130,6 +130,13 @@ class FeynmanInputDialog(QDialog):
                 followup_index = self.ui.followUpModelComboBox.findText(last_followup_model)
                 if followup_index >= 0:
                     self.ui.followUpModelComboBox.setCurrentIndex(followup_index)
+            
+            # 恢复语言选择
+            last_language = last_selections.get('language', '')
+            if last_language and hasattr(self.ui, 'languageComboBox'):
+                lang_index = self.ui.languageComboBox.findText(last_language)
+                if lang_index >= 0:
+                    self.ui.languageComboBox.setCurrentIndex(lang_index)
 
         except Exception as e:
             print(f"加载上次选择失败: {str(e)}")
@@ -168,6 +175,10 @@ class FeynmanInputDialog(QDialog):
             # 保存追问模型选择
             if hasattr(self.ui, 'followUpModelComboBox'):
                 config['last_selections']['followup_model'] = self.ui.followUpModelComboBox.currentText()
+            
+            # 保存语言选择
+            if hasattr(self.ui, 'languageComboBox'):
+                config['last_selections']['language'] = self.ui.languageComboBox.currentText()
 
             # 写入配置文件
             mw.addonManager.writeConfig(__name__, config)

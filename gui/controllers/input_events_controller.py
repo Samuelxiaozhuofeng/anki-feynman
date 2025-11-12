@@ -61,6 +61,9 @@ class InputEventsController:
 
         if hasattr(self.dialog.ui, 'followUpModelComboBox'):
             self.dialog.ui.followUpModelComboBox.currentIndexChanged.connect(self.on_selection_changed)
+        
+        if hasattr(self.dialog.ui, 'languageComboBox'):
+            self.dialog.ui.languageComboBox.currentIndexChanged.connect(self.on_selection_changed)
 
         # 添加PDF相关按钮事件
         if hasattr(self.dialog.ui, 'pdfImportButton'):
@@ -85,6 +88,8 @@ class InputEventsController:
             actual_type = "multiple_choice"
         elif question_type == get_message("question_type_knowledge", self.dialog.lang):
             actual_type = "knowledge_card"
+        elif question_type == get_message("question_type_language_learning", self.dialog.lang):
+            actual_type = "language_learning"
         elif question_type == get_message("question_type_custom", self.dialog.lang):
             actual_type = "custom"
         else:
@@ -95,6 +100,12 @@ class InputEventsController:
         selected_model = self.dialog.ui.modelComboBox.currentData()
         # 获取选择的追加提问模型
         selected_followup_model = self.dialog.ui.followUpModelComboBox.currentData()
+        
+        # 获取选择的语言
+        selected_language = self.dialog.ui.languageComboBox.currentText()
+        # 移除语言选项中的括号说明（如"Español (西班牙语)" -> "Español"）
+        if "(" in selected_language:
+            selected_language = selected_language.split("(")[0].strip()
         
         # 获取选择的模板ID
         template_id = None
@@ -135,7 +146,8 @@ class InputEventsController:
                 num_questions,
                 selected_model,  # 传递选择的模型
                 template_id,  # 传递模板ID
-                selected_followup_model  # 传递追加提问模型
+                selected_followup_model,  # 传递追加提问模型
+                selected_language  # 传递选择的语言
             )
             self.worker.moveToThread(self.thread)
 
@@ -274,6 +286,8 @@ class InputEventsController:
             actual_type = "multiple_choice"
         elif question_type == get_message("question_type_knowledge", self.dialog.lang):
             actual_type = "knowledge_card"
+        elif question_type == get_message("question_type_language_learning", self.dialog.lang):
+            actual_type = "language_learning"
         elif question_type == get_message("question_type_custom", self.dialog.lang):
             actual_type = "custom"
         else:
@@ -284,6 +298,12 @@ class InputEventsController:
         selected_model = self.dialog.ui.modelComboBox.currentData()
         # 获取选择的追加提问模型
         selected_followup_model = self.dialog.ui.followUpModelComboBox.currentData()
+        
+        # 获取选择的语言
+        selected_language = self.dialog.ui.languageComboBox.currentText()
+        # 移除语言选项中的括号说明（如"Español (西班牙语)" -> "Español"）
+        if "(" in selected_language:
+            selected_language = selected_language.split("(")[0].strip()
 
         # 获取选择的模板ID
         template_id = None
@@ -324,7 +344,8 @@ class InputEventsController:
                 num_questions,
                 selected_model,  # 传递选择的模型
                 template_id,  # 传递模板ID
-                selected_followup_model  # 传递追加提问模型
+                selected_followup_model,  # 传递追加提问模型
+                selected_language  # 传递选择的语言
             )
             self.worker.moveToThread(self.thread)
 
@@ -335,9 +356,25 @@ class InputEventsController:
             self.thread.finished.connect(self.thread.deleteLater)
             self.worker.questions_ready.connect(self.question_controller.on_questions_generated)
             self.worker.error_occurred.connect(self.question_controller.on_generation_error)
+            self.worker.progress_updated.connect(self.on_generation_progress)
 
             # 启动线程
             self.thread.start()
 
         except Exception as e:
             self.question_controller.on_generation_error(str(e))
+    
+    def on_generation_progress(self, current, total, message):
+        """
+        处理生成进度更新
+        
+        Args:
+            current: 当前进度
+            total: 总数
+            message: 进度消息
+        """
+        try:
+            # 打印进度信息到控制台
+            print(f"[进度] {current}/{total} - {message}")
+        except Exception as e:
+            print(f"更新进度显示时出错: {e}")

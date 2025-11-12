@@ -4,6 +4,98 @@
 
 from typing import Dict, Any
 
+# 语言学习知识卡提示模板
+LANGUAGE_LEARNING_CARD_PROMPT = """
+你是一个专业的语言学习卡片制作助手。请分析用户的语言学习材料，智能识别材料类型，并从中提取重要的学习要点，制作成知识卡片。
+
+## 第一步：识别材料类型
+
+用户的学习材料可能是以下类型之一或混合：
+
+### 类型A：纠错材料
+- 包含原句和纠正信息（如Correction、错误标注、语法改正等）
+- 可能包含表达建议（Expression suggestion）
+- 重点：错误点、正确用法对比
+
+### 类型B：纯学习材料
+- 课文、对话、例句、语法说明等
+- 没有明显的纠错信息
+- 重点：语法知识点、词汇用法、表达方式、句型结构
+
+### 类型C：混合材料
+- 既包含纠错，也包含学习内容
+- 需要分别提取
+
+## 第二步：智能提取知识点
+
+**如果是纠错材料**：
+- 识别错误类型（语法、词汇、拼写、表达方式等）
+- 提取"错误→正确"的对比
+- 说明错误原因和正确用法规则
+- 每个错误点制作一张卡片
+
+**如果是学习材料**：
+- 提取重要的语法结构和规则
+- 识别关键词汇的用法和搭配
+- 总结句型模式
+- 提取表达方式和习惯用法
+- 每个独立的知识点制作一张卡片
+
+## 第三步：制作卡片
+
+**卡片结构**：
+- **问题（question）**：用疑问句形式，清晰地提出学习重点
+  - 纠错类："XXX的正确用法是什么？"、"为什么不能用XXX？"
+  - 学习类："XXX语法结构如何使用？"、"XXX词汇在什么情境下使用？"
+  
+- **答案（answer）**：简洁明了的解释和正确用法
+  - 突出关键点
+  - 必要时给出规则说明
+  
+- **上下文（context）**：提供完整背景信息
+  - 纠错类：原句、纠正句、错误原因、正确规则
+  - 学习类：例句、用法场景、相关说明
+
+## 输出格式
+
+输出为JSON格式，包含cards数组：
+```json
+{{
+  "cards": [
+    {{
+      "question": "清晰的问题",
+      "answer": "简洁的答案和解释",
+      "context": "相关上下文和例句"
+    }}
+  ]
+}}
+```
+
+## 示例
+
+**纠错材料示例**：
+输入："costaba mucho tiempo → 应该用gastaba mucho tiempo"
+卡片：
+- 问题："表达'花费时间'时应该用costar还是gastar？"
+- 答案："应该用gastar tiempo，而不是costar tiempo。Costar表示'花费金钱/代价'，gastar表示'花费时间/金钱'"
+- 上下文："错误：costaba mucho tiempo\n正确：gastaba mucho tiempo\n说明：costar和gastar的区别"
+
+**学习材料示例**：
+输入："虚拟式现在时用于表达愿望、怀疑、否定等情绪。例如：Espero que vengas mañana."
+卡片：
+- 问题："西班牙语虚拟式现在时主要用于哪些情况？"
+- 答案："虚拟式现在时用于表达愿望（esperar que）、怀疑（dudar que）、否定（no creer que）等主观情绪和非事实内容"
+- 上下文："例句：Espero que vengas mañana (我希望你明天来)\n特点：que引导的从句中使用虚拟式"
+
+---
+
+输入文本：
+{input_text}
+
+请先识别材料类型，然后生成约{num_cards}张知识卡片（根据实际学习要点数量灵活调整）。
+确保每张卡片聚焦一个明确的知识点，问题清晰，答案实用。
+"""
+
 # SuperMemo制卡原则
 SUPERMEMO_PRINCIPLES = """
 1. 信息最小化原则：
@@ -94,7 +186,7 @@ def get_prompt_config(prompt_type: str = "basic") -> Dict[str, Any]:
     获取指定类型的提示模板配置
 
     Args:
-        prompt_type: 提示模板类型，可选值：basic（基础问答卡）或cloze（填空卡）
+        prompt_type: 提示模板类型，可选值：basic（基础问答卡）、cloze（填空卡）或language_learning（语言学习知识卡）
 
     Returns:
         包含提示模板和相关配置的字典
@@ -119,10 +211,17 @@ def get_prompt_config(prompt_type: str = "basic") -> Dict[str, Any]:
             "type": "cloze",
             "description": "填空卡生成器"
         }
+    elif prompt_type == "language_learning":
+        return {
+            **base_config,
+            "template": LANGUAGE_LEARNING_CARD_PROMPT,
+            "type": "language_learning",
+            "description": "语言学习知识卡生成器"
+        }
     else:
         raise ValueError(f"不支持的提示模板类型：{prompt_type}")
 
-def format_prompt(prompt_type: str, input_text: str, num_cards: int = 3) -> str:
+def format_prompt(prompt_type: str, input_text: str, num_cards: int = 3, language: str = "中文") -> str:
     """
     格式化提示模板
 
@@ -130,13 +229,25 @@ def format_prompt(prompt_type: str, input_text: str, num_cards: int = 3) -> str:
         prompt_type: 提示模板类型
         input_text: 输入文本
         num_cards: 要生成的卡片数量
+        language: 生成内容使用的语言
 
     Returns:
         格式化后的提示文本
     """
+    # 添加语言指示
+    language_instruction = f"请使用{language}生成所有知识卡的问题、答案和上下文。\n\n"
+    
     config = get_prompt_config(prompt_type)
-    return config["template"].format(
-        supermemo_principles=SUPERMEMO_PRINCIPLES,
-        input_text=input_text,
-        num_cards=num_cards
-    ) 
+    
+    # 对于语言学习类型，不需要supermemo_principles
+    if prompt_type == "language_learning":
+        return language_instruction + config["template"].format(
+            input_text=input_text,
+            num_cards=num_cards
+        )
+    else:
+        return language_instruction + config["template"].format(
+            supermemo_principles=SUPERMEMO_PRINCIPLES,
+            input_text=input_text,
+            num_cards=num_cards
+        ) 

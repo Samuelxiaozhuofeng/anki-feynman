@@ -1,322 +1,155 @@
 [
   {
-    "id": "1756222561",
-    "title": "tao claude thinking",
-    "created_at": "2025-08-26 23:36:01",
-    "updated_at": "2025-08-26 23:43:24",
-    "current_index": 15,
+    "id": "1762311479",
+    "title": "1105 ",
+    "created_at": "2025-11-05 10:57:59",
+    "updated_at": "2025-11-05 10:57:59",
+    "current_index": 2,
     "questions": {
       "questions": [
         {
-          "question": "根据文本的核心观点，当一个人在面对人生重大决策时（比如选择职业道路），最符合",
+          "question": "What is the central distinction between being 'rich' and being 'wealthy' as described in the text?",
           "options": [
-            "A. 详细研究成功人士的经历，严格按照他们的路径来规划自己的人生",
-            "B. 咨询多位专家和长辈的意见，选择大家都认为最安全可靠的方案",
-            "C. 深入倾听自己内心的声音，即使充满未知和风险也要走自己的独特道路",
-            "D. 先制定详细的计划和目标，然后按部就班地执行既定路线"
-          ],
-          "correct_answer": "C",
-          "explanation": "文本强调'道'是一条'无路之路'，每个人必须找到自己独特的路径。跟随他人或群体会让你偏离真正的道路。真正的道路需要个人独自探索，相信生命本身，即使充满风险也要有勇气走向未知。",
-          "source_content": "So the Way is a pathless path. It IS a path, but it is a pathless path... You are you, a unique individual. Only by walking, only by living your life, will you find the Way... With Tao you have to go alone, you have to be alone. Tao respects the individual and not the society."
-        },
-        {
-          "question": "在现代教育中，一位老师想要真正启发学生理解复杂概念。根据文本关于寓言功能的核心洞察，最有效的教学方式应该是：",
-          "options": [
-            "A. 提供详细的理论框架和标准答案，让学生精确掌握每个概念的定义",
-            "B. 通过富有启发性的故事和比喻，让学生自己去体验和发现其中的深层含义",
-            "C. 列举大量的实例和数据，用事实和逻辑来证明概念的正确性",
-            "D. 要求学生背诵经典理论，通过重复练习来加深记忆"
-          ],
-          "correct_answer": "B",
-          "explanation": "文本强调寓言是超越性的教学工具，其意义不在字面内容本身，而是指向某种无法直接表达的真理。寓言需要被体验和生活，而不是被分析。这种教学方式类似于'指向月亮的手指'，重点不在手指本身，而在于它所指向的方向。",
-          "source_content": "A parable is a device, a great device; it is not just an ordinary story. The purpose of it is not to entertain you, the purpose of it is to say something which there is no other way to say... It is a finger pointing to the moon. Don't cling to the finger – that is irrelevant – look at the moon."
-        },
-        {
-          "question": "一个企业管理者想要在团队中建立真正有效的秩序和纪律。基于文本中关于'秩序来源'的核心原理，最符合道家智慧的管理方式是：",
-          "options": [
-            "A. 制定详细的规章制度，要求所有员工严格遵守统一的工作流程",
-            "B. 让员工在适当的混乱和挑战中自然形成各自的工作节奏和内在纪律",
-            "C. 聘请外部顾问设计最优化的组织结构，然后强制实施",
-            "D. 学习其他成功企业的管理模式，直接复制到自己的团队中"
-          ],
-          "correct_answer": "B",
-          "explanation": "文本指出真正的秩序不是从外部强加的，而是从内在的核心自然产生的。通过面对和接受混乱的挑战，真正的秩序会自发涌现。这种秩序是新鲜的、原创的，不是传统的或二手的。强加的纪律会让人成为奴隶，而从觉知中产生的纪律会让人成为主人。",
-          "source_content": "The real order arises not from the outside, but from the innermost core of your being. Allow disorder don't repress it. Face it, take the challenge of disorder – and by taking the challenge of disorder and living it, living dangerously, an order arises in your being. That order is out of chaos, not out of any pattern."
-        },
-        {
-          "question": "根据文本的核心观点，什么阻碍了人们找到自己真正的精神道路？",
-          "options": [
-            "A. 缺乏足够的宗教知识和理论基础",
-            "B. 没有遇到合适的精神导师来指引方向",
-            "C. 过分依赖现成的知识体系和他人的经验，失去了对生命本身的信任",
-            "D. 缺乏足够的时间和精力来进行深入的灵性修行"
-          ],
-          "correct_answer": "C",
-          "explanation": "文本明确指出知识是通向真理的障碍，而不是无知。人们依赖人造的意识形态和体系，而不信任生命本身。跟随群体和传统让人感觉安全，但实际上是迷失的。真正的道路需要对生命的信任和独自前行的勇气。",
-          "source_content": "Tao says that ignorance is not the barrier against truth – knowledge is the barrier... Why can't you move alone? Because you don't trust life. You move with Mohammedans, you move with Hindus, you move with Jews, because you don't trust life you trust crowds."
-        },
-        {
-          "question": "在当代社会，一个人如何区分'真正的体验'和'二手的知识'？根据文本的核心洞察，判断标准应该是：",
-          "options": [
-            "A. 看这个知识是否来自权威的学术机构或宗教组织",
-            "B. 看这个知识是否经过了逻辑推理和科学验证",
-            "C. 看这个理解是否通过自己的生活体验获得，而不是从外部接受的现成答案",
-            "D. 看这个知识是否被大多数人认可和接受"
-          ],
-          "correct_answer": "C",
-          "explanation": "文本强调体验与理论的根本区别。真正的理解必须通过个人的生活实践获得，不能是借来的真理。即使是无知，如果是自己的，也比背负着累积的知识更好，因为它有纯真性。二手的宗教和神只会让你成为某个标签下的信徒，而不是找到你自己的神。",
-          "source_content": "Unless you know, nothing is going to help... Tao does not believe in the second-hand religion and in the second-hand God. If you take the God of Jesus you become a Christian... Tao says: But until you find YOUR God you are not on the Way."
-        },
-        {
-          "question": "文本中关于'目标与道路关系'的核心洞察，对现代人的目标设定有什么重要启发？",
-          "options": [
-            "A. 应该设定更加远大和具体的长期目标，这样才有前进的动力",
-            "B. 目标其实存在于每一个当下的步骤中，专注于正确的过程比执着于终点更重要",
-            "C. 需要将大目标分解成小目标，逐步实现才能最终成功",
-            "D. 目标必须是可测量和可达成的，否则就是空想"
-          ],
-          "correct_answer": "B",
-          "explanation": "文本明确指出道家大师不谈论目标，而只谈论道路，因为目标不是在道路的终点，而是遍布整条道路。每一刻、每一步都存在着目标。在道路上就是在目标中。这种观点强调过程的重要性，而不是对终点的执着。",
-          "source_content": "The goal is not at the very end of the Way, the goal is all over the Way – each moment and each step it is there. It is not that when the Way ends you arrive at the goal; each moment, wherever you are, you are at the goal if you are on the Way. To be on the Way is to be at the goal."
-        },
-        {
-          "question": "根据文本对'神学家'与'神秘主义者'的区别描述，这种区别的核心原理可以应用到其他哪个领域？",
-          "options": [
-            "A. 区分理论研究者和实践工作者：前者研究工作方法，后者直接投入工作实践",
-            "B. 区分学者和艺术家：前者追求客观知识，后者表达主观感受",
-            "C. 区分批评家和创作者：前者分析作品技巧，后者从生命体验中直接创作",
-            "D. 区分老师和学生：前者传授知识，后者接受教育"
-          ],
-          "correct_answer": "C",
-          "explanation": "文本中神学家'谈论关于神'，而神秘主义者'谈论神本身'。这个区别的核心在于：一种是从外部分析和讨论，另一种是从内在体验直接表达。这个原理最贴切地映射到批评家与创作者的区别：批评家分析和评论艺术作品，而创作者从自己的生命体验中直接创造艺术。",
-          "source_content": "There are two types of people: one who talks about God, he is the theologian; one who talks God, he is the mystic... The man who talks about God has not known God. otherwise why should he 'talk about'? The 'about' shows his ignorance. When a man talks God he has experienced."
-        },
-        {
-          "question": "在心理治疗领域，如何运用文本中'寓言需要被生活而不是被分析'的核心原理？",
-          "options": [
-            "A. 治疗师应该给来访者提供详细的心理分析报告和解释",
-            "B. 通过分享启发性的故事，让来访者在自己的生活体验中逐渐领悟其含义",
-            "C. 使用标准化的心理测试来准确诊断来访者的问题",
-            "D. 教给来访者具体的应对技巧和解决问题的方法"
-          ],
-          "correct_answer": "B",
-          "explanation": "文本强调寓言不能被剖析，剖析了就会死亡。寓言必须被生活，成为内心的节奏。这意味着真正的理解来自于体验和内化，而不是理性分析。在心理治疗中，这对应于通过隐喻和故事启发来访者自己去体验和发现，而不是直接给出分析和答案。",
-          "source_content": "A parable cannot be dissected; dissect, and it will die. The meaning is transcendental it is not in it, it is somewhere else... You have to live a parable, then you will come to its meaning. It has to become your heart, your breathing; it has to become your inner rhythm."
-        },
-        {
-          "question": "文本中关于'自由与安全'的核心矛盾，在现代职场环境中如何体现？",
-          "options": [
-            "A. 自由职业虽然收入不稳定，但能够发挥创造力；固定工作虽然安全，但限制个人发展",
-            "B. 跟随主流的职业发展路径虽然安全，但可能阻碍找到真正适合自己的独特道路",
-            "C. 高薪工作需要更多责任和压力，而轻松的工作薪资相对较低",
-            "D. 大公司提供更好的保障和培训，小公司提供更多的自主权和挑战"
-          ],
-          "correct_answer": "B",
-          "explanation": "文本指出跟随群体让人感觉安全，但正是因为这种安全感，人们永远不会去寻求和探索，因而迷失了真正的道路。这种安全感实际上是一种陷阱。在职场中，这对应于盲目跟随主流的成功模式，虽然看起来安全，但可能让人偏离自己真正的天赋和使命。",
-          "source_content": "There is great safety when you are following the crowd: the crowd protects you... Because of this security you are lost, because of this security you never search and you never seek and you never enquire."
-        },
-        {
-          "question": "根据文本的核心观点，什么是阻止人们独自前行的最根本原因？",
-          "options": [
-            "A. 缺乏必要的知识、技能和资源来应对挑战",
-            "B. 担心失败和他人的批评，害怕承担风险",
-            "C. 对生命本身缺乏信任，更相信人造的系统和群体的保护",
-            "D. 没有足够的时间和精力来进行独立的探索"
-          ],
-          "correct_answer": "C",
-          "explanation": "文本明确指出人们无法独自前行的根本原因是不信任生命本身。人们相信人造的观念、系统和意识形态，相信群体，但不相信生命、树木、河流、天空以及存在的永恒性。独自前行需要对生命的巨大信任。",
-          "source_content": "Why can't you move alone? Because you don't trust life. You move with Mohammedans, you move with Hindus, you move with Jews, because you don't trust life you trust crowds. To move alone one needs great trust in life... the trees, the rivers, the sky, the eternity of it all – one trusts this."
-        },
-        {
-          "question": "在创业过程中，如何应用文本中关于'混乱中诞生秩序'的核心原理？",
-          "options": [
-            "A. 详细制定商业计划书，严格按照既定流程执行每个步骤",
-            "B. 复制成功企业的商业模式，避免不必要的试错成本",
-            "C. 拥抱市场的不确定性和挑战，在应对混乱的过程中自然形成独特的商业秩序",
-            "D. 聘请专业咨询师设计完美的组织架构和管理制度"
-          ],
-          "correct_answer": "C",
-          "explanation": "文本强调真正的秩序来自于内在核心，通过面对混乱和挑战而自然产生，而不是外部强加的模式。在创业中，这意味着在市场的不确定性中摸索，通过实际应对挑战来形成独特的商业模式和组织形态，而不是依赖现成的模板。",
-          "source_content": "Allow disorder don't repress it. Face it, take the challenge of disorder – and by taking the challenge of disorder and living it, living dangerously, an order arises in your being. That order is out of chaos, not out of any pattern."
-        },
-        {
-          "question": "文本中'肚脐'的比喻揭示了什么关于学习和理解的深层原理？",
-          "options": [
-            "A. 每个概念都有其历史背景，理解背景才能真正理解概念",
-            "B. 有些知识看似无用，但实际上都有其存在的价值和意义",
-            "C. 表面上看似无意义的事物，其真正的意义往往指向更广阔的联系和可能性",
-            "D. 过去的经验是现在理解的基础，要重视历史的作用"
-          ],
-          "correct_answer": "C",
-          "explanation": "文本中肚脐的比喻说明了超越性意义的本质：肚脐本身在体内解剖时找不到现在的用途，但它指向一个超越的目的——表明这个人曾经是孩子，曾经与母亲相连。类似地，寓言也指向未来的可能性——与存在相连的可能性。这个比喻揭示了很多看似无意义的事物实际上具有指向性的、超越性的意义。",
-          "source_content": "As the navel shows something about the past, a parable shows something about the future. It shows that there is a possibility of growing, of being connected with existence... It indicates towards a future, towards something which can be but is not yet. It is transcendental."
-        },
-        {
-          "question": "在现代教育体系中，如何体现文本中'即使无知也比借来的知识更有价值'这一核心观点？",
-          "options": [
-            "A. 减少理论知识的教学，增加实践活动和体验学习的比重",
-            "B. 鼓励学生保持好奇心和质疑精神，即使不知道答案也要敢于提出问题",
-            "C. 让学生从自己的直接体验中得出结论，而不是一开始就灌输标准答案",
-            "D. 降低学术要求，让学生在轻松的环境中自然成长"
-          ],
-          "correct_answer": "C",
-          "explanation": "文本强调即使无知，如果是你自己的，也比背负着累积知识更好，因为它有纯真性。关键在于'自己的'与'借来的'的区别。在教育中，这意味着让学生通过自己的探索和体验来理解概念，而不是被动接受现成的知识，这样获得的理解才是真实和有生命力的。",
-          "source_content": "Tao says that even if you are ignorant and the ignorance is yours, it is good at least it is yours. and it has an innocence to it. But if you are burdened with accumulated knowledge, scripture, tradition, then you are living a false, pseudo life."
-        },
-        {
-          "question": "根据文本对'道'的描述，为什么道教不能成为一个组织化的宗教？这一原理在现代组织管理中有什么启示？",
-          "options": [
-            "A. 真正的创新和发展需要个体的独特贡献，过度的标准化会扼杀创造力",
-            "B. 组织化会导致官僚主义，影响效率和灵活性",
-            "C. 大规模组织难以保持文化的纯粹性和一致性",
-            "D. 组织化需要妥协，会偏离原始的价值观和目标"
+            "A. Being rich means having high current income, while being wealthy means possessing unspent financial assets",
+            "B. Being rich means owning luxury items, while being wealthy means having multiple income sources",
+            "C. Being rich means having high savings, while being wealthy means having many properties",
+            "D. Being rich is temporary, while being wealthy is permanent"
           ],
           "correct_answer": "A",
-          "explanation": "文本指出道教不能组织化是因为道尊重个体而非社会，尊重独特而非群体，尊重自由而非顺从。每个人必须找到自己独特的路径。这在组织管理中的启示是：真正的价值创造来自个体的独特贡献和创造力，过度标准化的组织结构可能会抑制这种独特性的发挥。",
-          "source_content": "Taoism is not an organised religion cannot be.It is an organic religion but not an organised religion... Tao respects the individual and not the society. Tao respects the unique and not the crowd. Tao respects freedom and not conformity."
+          "explanation": "The text differentiates 'rich' as having current high income that can support visible purchases, while 'wealth' is hidden, consisting of assets not yet spent that offer flexibility for the future.",
+          "source_content": "Rich is a current income... But wealth is hidden. It’s income not spent. Wealth is an option not yet taken to buy something later."
         },
         {
-          "question": "在面对人生困境时，文本中列子看到百年头骨的故事体现了什么核心的生命智慧？",
+          "question": "According to the text, why is true wealth difficult to recognize and imitate?",
           "options": [
-            "A. 要珍惜生命，因为死亡是每个人的最终归宿",
-            "B. 生死是自然规律，我们应该以平静的心态接受命运的安排",
-            "C. 从更深层的视角看，生死的分别只是表面现象，真正的智慧超越了常规的悲喜判断",
-            "D. 通过思考死亡的意义来获得对生命的更深理解"
-          ],
-          "correct_answer": "C",
-          "explanation": "列子指着头骨说'只有他和我知道你从未出生也永远不会死亡'，这体现了超越常规生死观念的深层智慧。关键在于'只有他和我知道'——这种理解不是普通的认知，而是一种超越表面现象的深层洞察。文本将此作为'无法表达之表达'的完美例子。",
-          "source_content": "ONLY HE AND I KNOW THAT YOU WERE NEVER BORN AND WILL NEVER DIE. IS IT HE WHO IS TRULY MISERABLE, IS IT WE WHO ARE TRULY HAPPY? I REJOICE in Lieh Tzu – he is one of the most perfect expressions for the inexpressible."
-        }
-      ]
-    }
-  },
-  {
-    "id": "1756274088",
-    "title": "5~10",
-    "created_at": "2025-08-27 13:54:48",
-    "updated_at": "2025-08-27 13:54:48",
-    "current_index": 0,
-    "questions": {
-      "questions": [
-        {
-          "question": "在《等待戈多》中，两个流浪汉最主要的行为象征着什么？",
-          "options": [
-            "A. 人类追求现实目标的努力",
-            "B. 人类对未来虚幻希望的依赖",
-            "C. 人类在日常生活中的务实行动",
-            "D. 人类通过哲学思考获取真理"
+            "A. Because wealthy individuals often live in remote areas away from public view",
+            "B. Because the signs of wealth are primarily hidden and not displayed in material possessions",
+            "C. Because wealth depends entirely on inheritance records which are private",
+            "D. Because society actively promotes laws against revealing one's net worth"
           ],
           "correct_answer": "B",
-          "explanation": "流浪汉的等待象征着人类总是将希望寄托于未来的某个虚幻的承诺，从而忽视了现实的生活体验。",
-          "source_content": "Everybody is waiting, hoping that something is going to happen: today it has not happened, tomorrow it is going to happen. This is the human mind: today is being wasted, but it hopes that tomorrow something is going to happen."
+          "explanation": "The text states that wealth is the income not spent and thus does not manifest in visible, imitable forms like luxury goods, making it harder to recognize or model after.",
+          "source_content": "The problem for many of us is that it is easy to find rich role models. It’s harder to find wealthy ones because by definition their success is more hidden."
         },
         {
-          "question": "作者如何评价“思考”在通向真理过程中的作用？",
+          "question": "How does the exercise analogy illustrate the difference between being rich and being wealthy?",
           "options": [
-            "A. 思考是理解真理的必要途径",
-            "B. 思考是一种文明的梦境形式",
-            "C. 思考是人类最高级的理性能力",
-            "D. 思考是体验真理的直接方式"
+            "A. Exercise is like wealth because it involves consistent savings of calories",
+            "B. Exercise is like being rich because it indicates effort, but true wealth is like maintaining a calorie deficit through self-control",
+            "C. Exercise and wealth are identical because they both avoid any form of consumption",
+            "D. Exercise is like being wealthy because it's invisible to others"
           ],
           "correct_answer": "B",
-          "explanation": "作者认为思考与做梦本质相同，只是换成了语言形式，因此不能通向真理，真理只能通过体验获得。",
-          "source_content": "Thinking is dreaming with words, dreaming is thinking with pictures – that’s the only difference."
+          "explanation": "The author likens doing exercise to being rich—showing effort—but says wealth resembles self-control over not consuming a 'treat meal', thus accruing net gains over time.",
+          "source_content": "Exercise is like being rich... Wealth is turning down that treat meal and actually burning net calories. It’s hard, and requires self-control."
         },
         {
-          "question": "根据文中观点，人类为什么会创造“神”、“天堂”等概念？",
+          "question": "What common misconception about becoming a 'millionaire' does the author highlight?",
           "options": [
-            "A. 因为这些存在是真实的",
-            "B. 因为宗教必须提供最终答案",
-            "C. 因为人类需要某种等待以忍受存在",
-            "D. 因为哲学推理必然得出这些结论"
+            "A. People often think it means having a million dollars in savings",
+            "B. People often confuse wanting to be a millionaire with wanting to spend a million dollars",
+            "C. People think billionaires are more financially secure than millionaires",
+            "D. People believe having a high salary guarantees millionaire status"
+          ],
+          "correct_answer": "B",
+          "explanation": "The author notes that people who say they want to be a millionaire often actually desire spending a million dollars, which is the opposite of building wealth.",
+          "source_content": "When most people say they want to be a millionaire, what they might actually mean is 'I’d like to spend a million dollars.' And that is literally the opposite of being a millionaire."
+        },
+        {
+          "question": "Why does the author say modern capitalism encourages misjudgment of people's wealth?",
+          "options": [
+            "A. It promotes laws protecting financial privacy",
+            "B. It rewards people for concealing their incomes from taxation",
+            "C. It has created an industry dedicated to helping people appear wealthy even if they are not",
+            "D. It discourages people from buying luxury goods"
           ],
           "correct_answer": "C",
-          "explanation": "文中指出，如果没有等待的对象，生活会变得难以忍受，因此人类发明了神与天堂作为寄托。",
-          "source_content": "You have created them because one has to wait for something, otherwise how will you tolerate existence? For what? How will you postpone living? How will you hope?"
+          "explanation": "Modern capitalism has developed industries that allow people to 'fake it' by portraying the appearance of wealth without actually having it.",
+          "source_content": "Modern capitalism makes helping people fake it until they make it a cherished industry."
         },
         {
-          "question": "“梦中之鹿”的寓言主要揭示了什么哲学思想？",
+          "question": "In the author’s definition, what is the 'very definition of wealth'?",
           "options": [
-            "A. 梦境和现实之间的界限模糊",
-            "B. 梦境总是比现实更真实",
-            "C. 法律能够解决一切存在性问题",
-            "D. 追求财富必然导致迷失"
+            "A. Accumulating assets without converting them into visible goods",
+            "B. Having multiple income streams",
+            "C. Spending less than you earn",
+            "D. Owning luxury real estate"
           ],
           "correct_answer": "A",
-          "explanation": "寓言通过梦与现实的交错，揭示了人类思想的虚幻性，说明梦境与现实的界限常常模糊。",
-          "source_content": "Dream within dream within dream... this is how the mind goes on. Once you start dreaming, there is no end to it."
+          "explanation": "The author clearly states that the only way to be wealthy is not to spend the money you do have, keeping it as financial assets rather than converting it into visible consumption.",
+          "source_content": "The only way to be wealthy is to not spend the money that you do have. It’s not just the only way to accumulate wealth; it’s the very definition of wealth."
         },
         {
-          "question": "文中如何区分“诗人”和“思想家”的不同？",
+          "question": "If a person wants to build real wealth according to the text’s principles, which choice best aligns with that goal?",
           "options": [
-            "A. 诗人依赖逻辑推理，而思想家依赖直觉",
-            "B. 诗人通过体验接近真理，而思想家停留在言辞",
-            "C. 诗人追求权力，而思想家追求美",
-            "D. 诗人代表科学方法，而思想家代表宗教"
-          ],
-          "correct_answer": "B",
-          "explanation": "文中指出，诗人注重体验与美感，因此更接近真理，而思想家依赖语言与逻辑，远离存在的真实。",
-          "source_content": "Poets come closest to religion. Thinkers, philosophers, logicians, theologians, scientists, are very far away. Their whole approach is verbal. The poetic approach is more existential."
-        },
-        {
-          "question": "“蜘蛛网”比喻在文中用来说明什么概念？",
-          "options": [
-            "A. 宇宙是分离的个体",
-            "B. 一切存在相互联系",
-            "C. 人类能够掌控自然",
-            "D. 真理只能通过逻辑证明"
-          ],
-          "correct_answer": "B",
-          "explanation": "“蜘蛛网”的比喻强调了整体的相互依存性，说明触动局部会影响整体，象征万物的连结。",
-          "source_content": "Basho has said: It is as if it were a vast spider’s web. Touch the spider’s web anywhere and the whole web starts shaking, trembling; the whole vibrates."
-        },
-        {
-          "question": "文中为何认为“自我（ego）”是阻碍幸福的根源？",
-          "options": [
-            "A. 因为自我让人忽视宗教",
-            "B. 因为自我使人脱离整体，导致不和谐",
-            "C. 因为自我让人拥有过多欲望",
-            "D. 因为自我妨碍理性思考"
-          ],
-          "correct_answer": "B",
-          "explanation": "作者认为自我是分离的幻觉，阻断人与整体的连结，从而导致冲突与不幸福。",
-          "source_content": "The very idea of separation is what we call the ego. If you are with the ego, you are not on the path, you are not in Tao."
-        },
-        {
-          "question": "根据文中观点，为什么国王虽然拥有财富与权力却不幸福？",
-          "options": [
-            "A. 因为财富会引发人际冲突",
-            "B. 因为权力必然带来孤独",
-            "C. 因为拥有越多，自我越强，幸福越少",
-            "D. 因为真正的幸福来自外部奖励"
-          ],
-          "correct_answer": "C",
-          "explanation": "文中指出，国王越富有，自我越强烈，因此幸福越少，这也是佛陀等人舍弃王位寻求解脱的原因。",
-          "source_content": "The more you have of THIS world, the less you have of happiness, because the more you have of this world, the stronger becomes your ego."
-        },
-        {
-          "question": "“满月使人疯狂”这一现象在文中用于支持什么论点？",
-          "options": [
-            "A. 人类意识受自然力量影响",
-            "B. 月亮象征纯粹的真理",
-            "C. 科学可以解释一切宗教体验",
-            "D. 自然现象完全独立于人类存在"
+            "A. Investing saved income instead of upgrading to a more expensive car",
+            "B. Purchasing a luxury property to increase social status",
+            "C. Maximizing spending on experiences instead of goods",
+            "D. Diversifying income streams without reducing lifestyle expenses"
           ],
           "correct_answer": "A",
-          "explanation": "文中用满月对人体和心理的影响来说明人类与自然紧密相连，体现相互依存的整体观。",
-          "source_content": "The full-moon night drives people crazy... ninety per cent of man is ocean and nothing else."
+          "explanation": "The text emphasizes keeping income unspent to retain flexibility and growth opportunities, making investing instead of indulging in visible consumption a wealth-building choice.",
+          "source_content": "Wealth is the nice cars not purchased... Wealth is financial assets that haven’t yet been converted into the stuff you see."
         },
         {
-          "question": "“贫穷的心灵”在文中象征着什么？",
+          "question": "When judging someone’s financial success, what key caution does the author provide?",
           "options": [
-            "A. 财产匮乏",
-            "B. 没有自我的人",
-            "C. 缺乏智慧的人",
-            "D. 缺乏宗教信仰的人"
+            "A. Avoid making any assumptions about anyone's life",
+            "B. Remember that apparent richness says nothing about hidden wealth",
+            "C. Consider their social media presence as the best indicator",
+            "D. Always verify income sources before judging"
           ],
           "correct_answer": "B",
-          "explanation": "“贫穷的心灵”意味着没有自我执着，因而能融入整体，这样的人才是精神上最富足的。",
-          "source_content": "’Poor in spirit’ means a man who has no ego, so poor that he has not even the idea of ’I’."
+          "explanation": "The author warns that visible signs of richness like cars or homes do not reflect the hidden nature of true wealth, which can lead to inaccurate assumptions.",
+          "source_content": "Someone driving a $100,000 car might be wealthy... That’s all you know about them."
+        },
+        {
+          "question": "What analogy does the author use to explain how wealth builds over time through self-control?",
+          "options": [
+            "A. Reading books to gain wisdom",
+            "B. Resisting calories after exercise",
+            "C. Planting trees and waiting for growth",
+            "D. Saving puzzle pieces until a set is complete"
+          ],
+          "correct_answer": "B",
+          "explanation": "The text compares wealth to resisting a post-workout treat, creating a gap between capability and choice that accrues benefits over time.",
+          "source_content": "Wealth is turning down that treat meal and actually burning net calories. It’s hard, and requires self-control."
+        },
+        {
+          "question": "In applying the author’s view, how should one interpret seeing someone live modestly?",
+          "options": [
+            "A. Assume they are struggling financially",
+            "B. Recognize they may be genuinely wealthy by keeping their assets unspent",
+            "C. Assume they are avoiding taxes",
+            "D. Consider them out of touch with modern lifestyle"
+          ],
+          "correct_answer": "B",
+          "explanation": "The text notes that the world has modest-looking individuals who are actually wealthy because their success is hidden in unspent assets.",
+          "source_content": "The world is filled with people who look modest but are actually wealthy and people who look rich who live at the razor’s edge of insolvency."
+        },
+        {
+          "question": "Why did Ronald Read only become a financial role model after his death?",
+          "options": [
+            "A. He only published his financial philosophy posthumously",
+            "B. His wealth was largely invisible during his lifetime",
+            "C. He inherited a fortune late in life",
+            "D. He had a controversial reputation while alive"
+          ],
+          "correct_answer": "B",
+          "explanation": "Ronald Read's wealth went unnoticed during his life because it was entirely hidden, only coming to public recognition after his passing.",
+          "source_content": "But he was nobody’s financial role model while he was living because every penny of his wealth was hidden, even to those who knew him."
+        },
+        {
+          "question": "If wealth is defined as 'what you don’t see,' what is its primary value according to the author?",
+          "options": [
+            "A. It increases your public image and status",
+            "B. It provides future options, flexibility, and growth potential",
+            "C. It ensures you can buy luxury goods immediately",
+            "D. It protects you from economic downturns automatically"
+          ],
+          "correct_answer": "B",
+          "explanation": "The text states wealth is an option not yet taken to buy something later, giving future options, flexibility, and growth opportunities.",
+          "source_content": "Wealth is an option not yet taken to buy something later. Its value lies in offering you options, flexibility, and growth."
         }
       ]
     }

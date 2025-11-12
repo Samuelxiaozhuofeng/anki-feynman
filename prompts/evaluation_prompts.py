@@ -34,7 +34,8 @@ def get_essay_evaluation_prompt(
     question: str,
     reference_answer: str,
     key_points: list,
-    user_answer: str
+    user_answer: str,
+    language: str = "中文"
 ) -> str:
     """
     格式化问答题评估提示模板
@@ -44,11 +45,15 @@ def get_essay_evaluation_prompt(
         reference_answer: 参考答案
         key_points: 关键点列表
         user_answer: 用户答案
+        language: 评估使用的语言
 
     Returns:
         格式化后的提示文本
     """
-    return ESSAY_EVALUATION_PROMPT.format(
+    # 添加语言指示
+    language_instruction = f"请使用{language}生成评估结果、反馈和建议。\n\n"
+    
+    return language_instruction + ESSAY_EVALUATION_PROMPT.format(
         question=question,
         reference_answer=reference_answer,
         key_points=", ".join(key_points),

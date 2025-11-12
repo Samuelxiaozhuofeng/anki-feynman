@@ -26,6 +26,8 @@ from ..prompts.system_prompts import (
     get_essay_eval_system_prompt
 )
 from .response_handler import ResponseHandler
+from .text_chunker import TextChunker
+from .concurrent_processor import ConcurrentProcessor
 
 class AIHandler:
     def __init__(self, config=None):
@@ -36,6 +38,34 @@ class AIHandler:
         
         # 当前选择的模型信息
         self.current_model_info = None
+        
+        # 加载额外设置
+        advanced_config = self.config.get('advanced_settings', {})
+        self.enable_concurrent = advanced_config.get('enable_concurrent_processing', False)
+        self.max_concurrent = advanced_config.get('max_concurrent_requests', 3)
+        self.enable_chunking = advanced_config.get('enable_text_chunking', False)
+        
+        # 保存默认设置（作为备份）
+        self.default_max_concurrent = self.max_concurrent
+        self.default_chunk_size = advanced_config.get('chunk_size', 2000)
+        self.default_chunk_overlap = advanced_config.get('chunk_overlap', 200)
+        self.default_chunk_strategy = advanced_config.get('chunk_strategy', 'smart')
+        
+        # 保存模型特定设置配置
+        self.model_specific_settings = advanced_config.get('model_specific_settings', {})
+        
+        # 初始化文本分块器
+        self.text_chunker = TextChunker(
+            chunk_size=self.default_chunk_size,
+            overlap=self.default_chunk_overlap,
+            strategy=self.default_chunk_strategy
+        )
+        
+        # 初始化并发处理器
+        self.concurrent_processor = ConcurrentProcessor(max_workers=self.max_concurrent)
+        
+        # 进度回调（可由外部设置）
+        self.progress_callback = None
         
         if self.provider == 'openai':
             self._setup_openai()
@@ -200,20 +230,96 @@ class AIHandler:
             except (KeyError, IndexError, ValueError) as e:
                 raise Exception(f"API响应解析失败：{str(e)}")
 
-    def generate_questions(self, content, question_type, num_questions=3):
-        """生成问题"""
-        if question_type == "multiple_choice":
-            return self._generate_choice_questions(content, num_questions)
-        elif question_type == "knowledge_card":
-            return self._generate_knowledge_cards(content, num_questions)
-        elif question_type == "custom":
-            return self._generate_custom_questions(content, num_questions)
-        else:
-            return self._generate_essay_questions(content, num_questions)
+    def _should_chunk_text(self, content: str) -> bool:
+        """
+        判断文本是否需要分块
+        
+        Args:
+            content: 文本内容
+            
+        Returns:
+            是否需要分块
+        """
+        if not self.enable_chunking:
+            return False
+        return self.text_chunker.should_chunk(content)
+    
+    def _distribute_questions_across_chunks(self, num_chunks: int, total_questions: int) -> list:
+        """
+        将问题数量分配到各个分块
+        
+        Args:
+            num_chunks: 分块数量
+            total_questions: 总问题数
+            
+        Returns:
+            每个分块应生成的问题数列表
+        """
+        if num_chunks <= 0:
+            return []
+        
+        # 基础分配
+        base_per_chunk = total_questions // num_chunks
+        remainder = total_questions % num_chunks
+        
+        # 分配问题数（前面的分块多分配余数）
+        distribution = []
+        for i in range(num_chunks):
+            if i < remainder:
+                distribution.append(base_per_chunk + 1)
+            else:
+                distribution.append(base_per_chunk)
+        
+        return distribution
+    
+    def _report_progress(self, current: int, total: int, message: str = ""):
+        """
+        报告进度
+        
+        Args:
+            current: 当前进度
+            total: 总数
+            message: 进度消息
+        """
+        if self.progress_callback:
+            try:
+                self.progress_callback(current, total, message)
+            except Exception as e:
+                print(f"Progress callback error: {e}")
 
-    def _generate_choice_questions(self, content, num_questions):
+    def generate_questions(self, content, question_type, num_questions=3, language="中文"):
+        """生成问题
+        
+        Args:
+            content: 学习内容
+            question_type: 问题类型
+            num_questions: 问题数量
+            language: 生成内容使用的语言
+        """
+        if question_type == "multiple_choice":
+            return self._generate_choice_questions(content, num_questions, language)
+        elif question_type == "knowledge_card":
+            return self._generate_knowledge_cards(content, num_questions, language)
+        elif question_type == "language_learning":
+            return self._generate_language_learning_cards(content, num_questions, language)
+        elif question_type == "custom":
+            return self._generate_custom_questions(content, num_questions, language)
+        else:
+            return self._generate_essay_questions(content, num_questions, language)
+
+    def _generate_choice_questions(self, content, num_questions, language="中文"):
         """生成选择题"""
-        prompt = get_choice_prompt(content, num_questions)
+        # 检查是否需要分块处理
+        if self._should_chunk_text(content):
+            print(f"文本长度 {len(content)}，启用分块处理")
+            return self._generate_choice_questions_with_chunking(content, num_questions, language)
+        
+        # 原有的单次生成逻辑
+        return self._generate_choice_questions_single(content, num_questions, language)
+    
+    def _generate_choice_questions_single(self, content, num_questions, language="中文"):
+        """生成选择题（单次请求）"""
+        prompt = get_choice_prompt(content, num_questions, language)
         max_retries = 3
         current_retry = 0
         
@@ -378,9 +484,19 @@ class AIHandler:
             
         raise Exception("生成选择题失败：超过最大重试次数")
 
-    def _generate_essay_questions(self, content, num_questions):
+    def _generate_essay_questions(self, content, num_questions, language="中文"):
         """生成问答题"""
-        prompt = get_essay_prompt(content, num_questions)
+        # 检查是否需要分块处理
+        if self._should_chunk_text(content):
+            print(f"文本长度 {len(content)}，启用分块处理")
+            return self._generate_essay_questions_with_chunking(content, num_questions, language)
+        
+        # 原有的单次生成逻辑
+        return self._generate_essay_questions_single(content, num_questions, language)
+    
+    def _generate_essay_questions_single(self, content, num_questions, language="中文"):
+        """生成问答题（单次请求）"""
+        prompt = get_essay_prompt(content, num_questions, language)
         max_retries = 3
         current_retry = 0
         
@@ -452,9 +568,19 @@ class AIHandler:
         
         raise Exception("生成问答题失败：超过最大重试次数")
 
-    def _generate_knowledge_cards(self, content, num_cards=3):
+    def _generate_knowledge_cards(self, content, num_cards=3, language="中文"):
         """生成知识卡片"""
-        prompt = format_prompt("basic", content, num_cards)
+        # 检查是否需要分块处理
+        if self._should_chunk_text(content):
+            print(f"文本长度 {len(content)}，启用分块处理")
+            return self._generate_knowledge_cards_with_chunking(content, num_cards, language)
+        
+        # 原有的单次生成逻辑
+        return self._generate_knowledge_cards_single(content, num_cards, language)
+    
+    def _generate_knowledge_cards_single(self, content, num_cards=3, language="中文"):
+        """生成知识卡片（单次请求）"""
+        prompt = format_prompt("basic", content, num_cards, language)
         max_retries = 3
         current_retry = 0
         
@@ -478,6 +604,63 @@ class AIHandler:
         
         raise Exception("生成知识卡失败：超过最大重试次数")
 
+    def _generate_language_learning_cards(self, content, num_cards=5, language="中文"):
+        """生成语言学习知识卡片
+        
+        Args:
+            content: 学习记录文本（包含原句、纠正、建议等）
+            num_cards: 要生成的卡片数量
+            language: 生成内容使用的语言
+        
+        Returns:
+            包含cards数组的字典
+        """
+        # 检查是否需要分块处理
+        if self._should_chunk_text(content):
+            print(f"文本长度 {len(content)}，启用分块处理")
+            return self._generate_language_learning_cards_with_chunking(content, num_cards, language)
+        
+        # 原有的单次生成逻辑
+        return self._generate_language_learning_cards_single(content, num_cards, language)
+    
+    def _generate_language_learning_cards_single(self, content, num_cards=5, language="中文"):
+        """生成语言学习知识卡片（单次请求）
+        
+        Args:
+            content: 学习记录文本
+            num_cards: 要生成的卡片数量
+            language: 生成内容使用的语言
+        
+        Returns:
+            包含cards数组的字典
+        """
+        from ..prompts.system_prompts import get_language_learning_cards_prompt
+        
+        prompt = format_prompt("language_learning", content, num_cards, language)
+        max_retries = 3
+        current_retry = 0
+        
+        while current_retry < max_retries:
+            try:
+                response = self._call_ai_api([{
+                    "role": "system",
+                    "content": get_language_learning_cards_prompt()
+                }, {
+                    "role": "user",
+                    "content": prompt
+                }])
+                
+                # 使用knowledge_card schema验证，因为格式相同
+                return self.response_handler.parse_and_validate(response, "knowledge_card")
+                
+            except Exception as e:
+                current_retry += 1
+                if current_retry >= max_retries:
+                    raise e
+                continue
+        
+        raise Exception("生成语言学习知识卡失败：超过最大重试次数")
+
     def convert_to_cloze(self, card_data):
         """将知识卡转换为填空卡"""
         prompt = format_prompt("cloze", json.dumps(card_data, ensure_ascii=False))
@@ -496,12 +679,18 @@ class AIHandler:
         except Exception as e:
             raise Exception(f"转换为填空卡失败：{str(e)}")
 
-    def evaluate_answer(self, question_data, user_answer):
-        """评估用户答案"""
+    def evaluate_answer(self, question_data, user_answer, language="中文"):
+        """评估用户答案
+        
+        Args:
+            question_data: 问题数据
+            user_answer: 用户答案
+            language: 评估使用的语言
+        """
         if "options" in question_data:  # 选择题
             return self._evaluate_choice_answer(question_data, user_answer)
         else:  # 问答题
-            return self._evaluate_essay_answer(question_data, user_answer)
+            return self._evaluate_essay_answer(question_data, user_answer, language)
 
     def _evaluate_choice_answer(self, question_data, user_answer):
         """评估选择题答案"""
@@ -524,13 +713,14 @@ class AIHandler:
             "feedback": feedback
         }
 
-    def _evaluate_essay_answer(self, question_data, user_answer):
+    def _evaluate_essay_answer(self, question_data, user_answer, language="中文"):
         """评估问答题答案"""
         prompt = get_essay_evaluation_prompt(
             question=question_data['question'],
             reference_answer=question_data['reference_answer'],
             key_points=question_data['key_points'],
-            user_answer=user_answer
+            user_answer=user_answer,
+            language=language
         )
 
         try:
@@ -547,9 +737,14 @@ class AIHandler:
         except Exception as e:
             raise Exception(f"评估答案时出错：{str(e)}")
 
-    def handle_follow_up_question(self, context):
-        """处理追问"""
-        messages = get_followup_messages(context)
+    def handle_follow_up_question(self, context, language="中文"):
+        """处理追问
+        
+        Args:
+            context: 上下文信息
+            language: 回答使用的语言
+        """
+        messages = get_followup_messages(context, language)
         response = self._call_ai_api(messages)
         return response
 
@@ -674,13 +869,42 @@ class AIHandler:
                 
         if found_model:
             self.current_model_info = found_model
+            # 应用模型特定设置（如果有）
+            self._apply_model_specific_settings(model_name)
             return True
         else:
             # 如果找不到模型，重置为默认设置
             self.current_model_info = None
+            self._reset_to_default_settings()
             return False
+    
+    def _apply_model_specific_settings(self, model_name):
+        """应用模型特定设置（如果存在）"""
+        if model_name in self.model_specific_settings:
+            settings = self.model_specific_settings[model_name]
+            
+            # 应用并发设置
+            if 'max_concurrent_requests' in settings:
+                self.max_concurrent = settings['max_concurrent_requests']
+                self.concurrent_processor.set_max_workers(self.max_concurrent)
+                print(f"为模型 {model_name} 应用特定并发设置: {self.max_concurrent}")
+            
+            # 应用分块设置
+            if 'chunk_size' in settings:
+                chunk_size = settings['chunk_size']
+                self.text_chunker.chunk_size = chunk_size
+                print(f"为模型 {model_name} 应用特定分块大小: {chunk_size}")
+        else:
+            # 没有特定设置，使用默认值
+            self._reset_to_default_settings()
+    
+    def _reset_to_default_settings(self):
+        """重置为默认设置"""
+        self.max_concurrent = self.default_max_concurrent
+        self.concurrent_processor.set_max_workers(self.max_concurrent)
+        self.text_chunker.chunk_size = self.default_chunk_size
 
-    def _generate_custom_questions(self, content, template_id, num_questions):
+    def _generate_custom_questions(self, content, template_id, num_questions, language="中文"):
         """使用自定义模板生成选择题"""
         # 从配置中获取模板
         config = mw.addonManager.getConfig(__name__)
@@ -793,7 +1017,231 @@ JSON格式要求：
                 
         raise Exception("生成问题失败，请检查提示词模板是否正确")
 
-    def generate_custom_questions(self, content, template_id, num_questions=3):
+    def generate_custom_questions(self, content, template_id, num_questions=3, language="中文"):
         """生成自定义问题的公共方法"""
-        return self._generate_custom_questions(content, template_id, num_questions)
+        return self._generate_custom_questions(content, template_id, num_questions, language)
+    
+    def _generate_choice_questions_with_chunking(self, content, num_questions, language="中文"):
+        """
+        使用分块处理生成选择题
+        
+        Args:
+            content: 文本内容
+            num_questions: 总问题数
+            language: 生成内容使用的语言
+            
+        Returns:
+            合并后的问题结果
+        """
+        try:
+            # 分块
+            chunks = self.text_chunker.chunk_text(content)
+            num_chunks = len(chunks)
+            print(f"文本已分为 {num_chunks} 块")
+            
+            # 分配问题数
+            question_distribution = self._distribute_questions_across_chunks(num_chunks, num_questions)
+            
+            # 准备任务列表
+            tasks = []
+            for i, (chunk_text, start, end) in enumerate(chunks):
+                num_q = question_distribution[i]
+                if num_q > 0:  # 只处理需要生成问题的分块
+                    tasks.append((chunk_text, num_q))
+            
+            # 检查是否启用并发
+            if self.enable_concurrent and len(tasks) > 1:
+                print(f"使用并发处理，最大并发数: {self.max_concurrent}")
+                
+                # 并发处理
+                def progress_callback(completed, total):
+                    self._report_progress(completed, total, f"正在处理分块 {completed}/{total}")
+                
+                results = self.concurrent_processor.process_batch(
+                    tasks,
+                    lambda chunk_text, num_q: self._generate_choice_questions_single(chunk_text, num_q, language),
+                    progress_callback=progress_callback
+                )
+            else:
+                # 顺序处理
+                print("顺序处理各个分块")
+                results = []
+                for i, (chunk_text, num_q) in enumerate(tasks):
+                    print(f"处理分块 {i+1}/{len(tasks)}")
+                    self._report_progress(i+1, len(tasks), f"正在处理分块 {i+1}/{len(tasks)}")
+                    result = self._generate_choice_questions_single(chunk_text, num_q, language)
+                    results.append(result)
+            
+            # 合并结果
+            merged = self.text_chunker.merge_results(results, "questions")
+            print(f"已合并 {len(merged.get('questions', []))} 个问题")
+            
+            return merged
+            
+        except Exception as e:
+            print(f"分块处理失败: {str(e)}，回退到单次处理")
+            # 回退到单次处理
+            return self._generate_choice_questions_single(content, num_questions)
+    
+    def _generate_essay_questions_with_chunking(self, content, num_questions, language="中文"):
+        """
+        使用分块处理生成问答题
+        
+        Args:
+            content: 文本内容
+            num_questions: 总问题数
+            language: 生成内容使用的语言
+            
+        Returns:
+            合并后的问题结果
+        """
+        try:
+            chunks = self.text_chunker.chunk_text(content)
+            num_chunks = len(chunks)
+            print(f"文本已分为 {num_chunks} 块")
+            
+            question_distribution = self._distribute_questions_across_chunks(num_chunks, num_questions)
+            
+            tasks = []
+            for i, (chunk_text, start, end) in enumerate(chunks):
+                num_q = question_distribution[i]
+                if num_q > 0:
+                    tasks.append((chunk_text, num_q))
+            
+            if self.enable_concurrent and len(tasks) > 1:
+                print(f"使用并发处理，最大并发数: {self.max_concurrent}")
+                
+                def progress_callback(completed, total):
+                    self._report_progress(completed, total, f"正在处理分块 {completed}/{total}")
+                
+                results = self.concurrent_processor.process_batch(
+                    tasks,
+                    lambda chunk_text, num_q: self._generate_essay_questions_single(chunk_text, num_q, language),
+                    progress_callback=progress_callback
+                )
+            else:
+                print("顺序处理各个分块")
+                results = []
+                for i, (chunk_text, num_q) in enumerate(tasks):
+                    print(f"处理分块 {i+1}/{len(tasks)}")
+                    self._report_progress(i+1, len(tasks), f"正在处理分块 {i+1}/{len(tasks)}")
+                    result = self._generate_essay_questions_single(chunk_text, num_q, language)
+                    results.append(result)
+            
+            merged = self.text_chunker.merge_results(results, "questions")
+            print(f"已合并 {len(merged.get('questions', []))} 个问题")
+            
+            return merged
+            
+        except Exception as e:
+            print(f"分块处理失败: {str(e)}，回退到单次处理")
+            return self._generate_essay_questions_single(content, num_questions)
+    
+    def _generate_knowledge_cards_with_chunking(self, content, num_cards, language="中文"):
+        """
+        使用分块处理生成知识卡
+        
+        Args:
+            content: 文本内容
+            num_cards: 总卡片数
+            language: 生成内容使用的语言
+            
+        Returns:
+            合并后的卡片结果
+        """
+        try:
+            chunks = self.text_chunker.chunk_text(content)
+            num_chunks = len(chunks)
+            print(f"文本已分为 {num_chunks} 块")
+            
+            card_distribution = self._distribute_questions_across_chunks(num_chunks, num_cards)
+            
+            tasks = []
+            for i, (chunk_text, start, end) in enumerate(chunks):
+                num_c = card_distribution[i]
+                if num_c > 0:
+                    tasks.append((chunk_text, num_c))
+            
+            if self.enable_concurrent and len(tasks) > 1:
+                print(f"使用并发处理，最大并发数: {self.max_concurrent}")
+                
+                def progress_callback(completed, total):
+                    self._report_progress(completed, total, f"正在处理分块 {completed}/{total}")
+                
+                results = self.concurrent_processor.process_batch(
+                    tasks,
+                    lambda chunk_text, num_c: self._generate_knowledge_cards_single(chunk_text, num_c, language),
+                    progress_callback=progress_callback
+                )
+            else:
+                print("顺序处理各个分块")
+                results = []
+                for i, (chunk_text, num_c) in enumerate(tasks):
+                    print(f"处理分块 {i+1}/{len(tasks)}")
+                    self._report_progress(i+1, len(tasks), f"正在处理分块 {i+1}/{len(tasks)}")
+                    result = self._generate_knowledge_cards_single(chunk_text, num_c, language)
+                    results.append(result)
+            
+            merged = self.text_chunker.merge_results(results, "cards")
+            print(f"已合并 {len(merged.get('cards', []))} 张卡片")
+            
+            return merged
+            
+        except Exception as e:
+            print(f"分块处理失败: {str(e)}，回退到单次处理")
+            return self._generate_knowledge_cards_single(content, num_cards)
+    
+    def _generate_language_learning_cards_with_chunking(self, content, num_cards, language="中文"):
+        """
+        使用分块处理生成语言学习知识卡
+        
+        Args:
+            content: 文本内容
+            num_cards: 总卡片数
+            language: 生成内容使用的语言
+            
+        Returns:
+            合并后的卡片结果
+        """
+        try:
+            chunks = self.text_chunker.chunk_text(content)
+            num_chunks = len(chunks)
+            print(f"文本已分为 {num_chunks} 块")
+            
+            card_distribution = self._distribute_questions_across_chunks(num_chunks, num_cards)
+            
+            tasks = []
+            for i, (chunk_text, start, end) in enumerate(chunks):
+                num_c = card_distribution[i]
+                if num_c > 0:
+                    tasks.append((chunk_text, num_c))
+            
+            if self.enable_concurrent and len(tasks) > 1:
+                print(f"使用并发处理，最大并发数: {self.max_concurrent}")
+                
+                def progress_callback(completed, total):
+                    self._report_progress(completed, total, f"正在处理分块 {completed}/{total}")
+                
+                results = self.concurrent_processor.process_batch(
+                    tasks,
+                    lambda chunk_text, num_c: self._generate_language_learning_cards_single(chunk_text, num_c, language),
+                    progress_callback=progress_callback
+                )
+            else:
+                print("顺序处理各个分块")
+                results = []
+                for i, (chunk_text, num_c) in enumerate(tasks):
+                    print(f"处理分块 {i+1}/{len(tasks)}")
+                    self._report_progress(i+1, len(tasks), f"正在处理分块 {i+1}/{len(tasks)}")
+                    result = self._generate_language_learning_cards_single(chunk_text, num_c, language)
+                    results.append(result)
+            
+            merged = self.text_chunker.merge_results(results, "cards")
+            print(f"已合并 {len(merged.get('cards', []))} 张语言学习卡片")
+            
+            return merged
+            
+        except Exception as e:
+            print(f"分块处理失败: {str(e)}，回退到单次处理")
+            return self._generate_language_learning_cards_single(content, num_cards)
             

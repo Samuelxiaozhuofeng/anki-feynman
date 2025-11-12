@@ -27,9 +27,10 @@
 
 
 """
-Implementation of stream filters for PDF.
+Implementation of stream filters; §7.4 Filters of the PDF 2.0 specification.
 
-See TABLE H.1 Abbreviations for standard filter names
+§8.9.7 Inline images of the PDF 2.0 specification has abbreviations that can be
+used for the names of filters in an inline image object.
 """
 __author__ = "Mathieu Fenniak"
 __author_email__ = "biziqe@mathieu.fenniak.net"
@@ -70,6 +71,7 @@ from .generic import (
 )
 
 ZLIB_MAX_OUTPUT_LENGTH = 75_000_000
+LZW_MAX_OUTPUT_LENGTH = 1_000_000_000
 
 
 def _decompress_with_limit(data: bytes) -> bytes:
@@ -434,7 +436,7 @@ class LZWDecode:
             self.data = data
 
         def decode(self) -> bytes:
-            return _LzwCodec().decode(self.data)
+            return _LzwCodec(max_output_length=LZW_MAX_OUTPUT_LENGTH).decode(self.data)
 
     @staticmethod
     def decode(
@@ -525,13 +527,12 @@ class JPXDecode:
 
         Args:
           data: text to decode.
-          decode_parms: a dictionary of parameter values.
+          decode_parms: this filter does not use parameters.
 
         Returns:
           decoded data.
 
         """
-        # decode_parms: this filter does not use parameters
         return data
 
 
