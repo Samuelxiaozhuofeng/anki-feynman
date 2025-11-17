@@ -1,4 +1,23 @@
-"""系统提示配置文件"""
+"""
+系统提示配置文件
+
+⚠️ 已弃用 (DEPRECATED) ⚠️
+
+此文件中的所有函数已不再使用。
+为了消除System Prompt和User Prompt之间的冗余，所有提示词已整合到User Prompt中。
+
+优化详情请参考：
+- PROMPT_REDUNDANCY_ANALYSIS.md - System/User Prompt冗余分析
+- REFACTORING_SUMMARY.md - 提示词重构总结
+
+新的提示词使用方式：
+- 选择题：使用 prompts.choice_prompts.get_choice_prompt()
+- 问答题：使用 prompts.essay_prompts.get_essay_prompt()
+- 知识卡：使用 prompts.knowledge_card_prompts.format_prompt()
+- 评估：使用 prompts.evaluation_prompts 中的函数
+
+此文件保留仅用于向后兼容，未来版本可能会删除。
+"""
 
 from .common import (
     ROLE_LEARNING_STRATEGIST,

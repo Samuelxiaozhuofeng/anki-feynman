@@ -19,12 +19,6 @@ from ..prompts.essay_prompts import get_essay_prompt
 from ..prompts.evaluation_prompts import get_essay_evaluation_prompt, get_choice_evaluation_messages
 from ..prompts.followup_prompts import get_followup_messages
 from ..prompts.language_prompts import format_language_pattern_messages  # 导入语言模式练习提示
-from ..prompts.system_prompts import (
-    get_choice_questions_prompt,
-    get_knowledge_cards_prompt,
-    get_cloze_conversion_prompt,
-    get_essay_eval_system_prompt
-)
 from .response_handler import ResponseHandler
 from .text_chunker import TextChunker
 from .concurrent_processor import ConcurrentProcessor
@@ -322,17 +316,16 @@ class AIHandler:
         prompt = get_choice_prompt(content, num_questions, language)
         max_retries = 3
         current_retry = 0
-        
+
         # 检查当前使用的模型是否为Claude
         model_name = self.model
         if self.current_model_info:
             model_name = self.current_model_info.get('name', self.model)
         is_claude_model = "claude" in model_name.lower()
-        
-        # 如果题目数量较多，增加系统提示的强调
-        system_prompt = get_choice_questions_prompt()        # 为Claude模型添加简要的格式要求
+
+        # 为Claude模型或大量题目添加额外提醒
         if is_claude_model:
-            system_prompt += """
+            prompt += """
 
 注意：当前使用 Claude 模型。
 1. 直接返回一个有效的 JSON 对象，不要在前后添加说明文字
@@ -340,17 +333,14 @@ class AIHandler:
 3. 所有字符串必须使用双引号，保证 JSON 可以被严格解析
 """
         elif num_questions > 5:
-            system_prompt += "\n\n特别注意：你正在生成较多数量的题目，请特别注意JSON格式的正确性，确保每个问题对象之间有逗号分隔，所有属性名和字符串值都用双引号包围，每个属性后面都有逗号（除了最后一个）。"
-        
+            prompt += "\n\n特别注意：你正在生成较多数量的题目，请特别注意JSON格式的正确性，确保每个问题对象之间有逗号分隔，所有属性名和字符串值都用双引号包围，每个属性后面都有逗号（除了最后一个）。"
+
         while current_retry < max_retries:
             try:
                 # 打印当前重试次数，便于调试
                 print(f"正在生成选择题，第{current_retry + 1}次尝试...")
-                
+
                 response = self._call_ai_api([{
-                    "role": "system",
-                    "content": system_prompt
-                }, {
                     "role": "user",
                     "content": prompt
                 }])
@@ -483,18 +473,14 @@ class AIHandler:
         prompt = get_essay_prompt(content, num_questions, language)
         max_retries = 3
         current_retry = 0
-        
-        # 如果题目数量较多，增加系统提示的强调
-        system_prompt = "你是一个教育助手，专门生成符合费曼学习法的问答题。你的回答必须是纯JSON格式，不要添加任何代码块标记。确保JSON格式正确，特别是逗号、引号等标点符号的使用。"
+
+        # 如果题目数量较多，添加额外提醒
         if num_questions > 5:
-            system_prompt += "\n\n特别注意：你正在生成较多数量的题目，请特别注意JSON格式的正确性，确保每个问题对象之间有逗号分隔，所有属性名和字符串值都用双引号包围，每个属性后面都有逗号（除了最后一个）。"
-        
+            prompt += "\n\n特别注意：你正在生成较多数量的题目，请特别注意JSON格式的正确性，确保每个问题对象之间有逗号分隔，所有属性名和字符串值都用双引号包围，每个属性后面都有逗号（除了最后一个）。"
+
         while current_retry < max_retries:
             try:
                 response = self._call_ai_api([{
-                    "role": "system",
-                    "content": system_prompt
-                }, {
                     "role": "user",
                     "content": prompt
                 }])
@@ -567,13 +553,10 @@ class AIHandler:
         prompt = format_prompt("basic", content, num_cards, language)
         max_retries = 3
         current_retry = 0
-        
+
         while current_retry < max_retries:
             try:
                 response = self._call_ai_api([{
-                    "role": "system",
-                    "content": get_knowledge_cards_prompt()
-                }, {
                     "role": "user",
                     "content": prompt
                 }])
@@ -609,27 +592,22 @@ class AIHandler:
     
     def _generate_language_learning_cards_single(self, content, num_cards=5, language="中文"):
         """生成语言学习知识卡片（单次请求）
-        
+
         Args:
             content: 学习记录文本
             num_cards: 要生成的卡片数量
             language: 生成内容使用的语言
-        
+
         Returns:
             包含cards数组的字典
         """
-        from ..prompts.system_prompts import get_language_learning_cards_prompt
-        
         prompt = format_prompt("language_learning", content, num_cards, language)
         max_retries = 3
         current_retry = 0
-        
+
         while current_retry < max_retries:
             try:
                 response = self._call_ai_api([{
-                    "role": "system",
-                    "content": get_language_learning_cards_prompt()
-                }, {
                     "role": "user",
                     "content": prompt
                 }])
@@ -648,12 +626,9 @@ class AIHandler:
     def convert_to_cloze(self, card_data):
         """将知识卡转换为填空卡"""
         prompt = format_prompt("cloze", json.dumps(card_data, ensure_ascii=False))
-        
+
         try:
             response = self._call_ai_api([{
-                "role": "system",
-                "content": get_cloze_conversion_prompt()
-            }, {
                 "role": "user",
                 "content": prompt
             }])
@@ -709,9 +684,6 @@ class AIHandler:
 
         try:
             response = self._call_ai_api([{
-                "role": "system",
-                "content": get_essay_eval_system_prompt()
-            }, {
                 "role": "user",
                 "content": prompt
             }])
@@ -916,16 +888,16 @@ class AIHandler:
         # 构建提示词，只替换content变量
         prompt = template['content'].format(content=content)
 
-        # 在提示词末尾添加问题数量要求
-        prompt += f"\n\n请生成{num_questions}道选择题。"
+        # 在提示词末尾添加问题数量要求和JSON格式说明
+        prompt += f"""
 
-        # 添加系统提示，确保返回正确的JSON格式
-        system_prompt = """你是一个基于费曼学习法的高级教学助手。请根据用户提供的提示词生成选择题。
+请生成{num_questions}道选择题。
+
 请严格按照以下JSON格式返回，确保格式完整：
 
-{
+{{
     "questions": [
-        {
+        {{
             "question": "问题内容",
             "options": [
                 "A. 选项1",
@@ -936,9 +908,9 @@ class AIHandler:
             "correct_answer": "A/B/C/D其中之一",
             "explanation": "解释为什么这是正确答案",
             "source_content": "与该问题直接相关的原文段落"
-        }
+        }}
     ]
-}
+}}
 
 JSON格式要求：
 1. 不要添加任何代码块标记（如```json）
@@ -948,19 +920,16 @@ JSON格式要求：
 5. 确保每个JSON对象和数组的开始和结束都有正确的括号
 6. 每个属性后面都必须有逗号，除了最后一个属性
 7. 所有字符串必须用双引号包围，不能用单引号
-8. 当生成多个问题时，每个问题对象之间必须用逗号分隔
+8. 当生成多个问题时，每个对象之间必须用逗号分隔
 9. 检查生成的JSON是否完整，特别是在生成大量题目时
 10. 确保每个问题对象的所有字段都正确闭合"""
-        
+
         max_retries = 3
         current_retry = 0
-        
+
         while current_retry < max_retries:
             try:
                 response = self._call_ai_api([{
-                    "role": "system",
-                    "content": system_prompt
-                }, {
                     "role": "user",
                     "content": prompt
                 }])
@@ -1019,22 +988,22 @@ JSON格式要求：
         # 构建提示词
         prompt = template['content'].format(content=content)
 
-        # 在提示词末尾添加卡片数量要求
-        prompt += f"\n\n请生成{num_questions}张知识卡。"
+        # 在提示词末尾添加卡片数量要求和JSON格式说明
+        prompt += f"""
 
-        # 添加系统提示，确保返回正确的JSON格式
-        system_prompt = """你是一个基于费曼学习法的高级教学助手。请根据用户提供的提示词生成知识卡。
+请生成{num_questions}张知识卡。
+
 请严格按照以下JSON格式返回，确保格式完整：
 
-{
+{{
     "cards": [
-        {
+        {{
             "question": "问题内容",
             "answer": "答案内容",
             "context": "上下文信息"
-        }
+        }}
     ]
-}
+}}
 
 JSON格式要求：
 1. 不要添加任何代码块标记（如```json）
@@ -1048,9 +1017,6 @@ JSON格式要求：
         while current_retry < max_retries:
             try:
                 response = self._call_ai_api([{
-                    "role": "system",
-                    "content": system_prompt
-                }, {
                     "role": "user",
                     "content": prompt
                 }])
@@ -1080,23 +1046,23 @@ JSON格式要求：
         # 构建提示词
         prompt = template['content'].format(content=content)
 
-        # 在提示词末尾添加问题数量要求
-        prompt += f"\n\n请生成{num_questions}道问答题。"
+        # 在提示词末尾添加问题数量要求和JSON格式说明
+        prompt += f"""
 
-        # 添加系统提示，确保返回正确的JSON格式
-        system_prompt = """你是一个基于费曼学习法的高级教学助手。请根据用户提供的提示词生成问答题。
+请生成{num_questions}道问答题。
+
 请严格按照以下JSON格式返回，确保格式完整：
 
-{
+{{
     "questions": [
-        {
+        {{
             "question": "问题内容",
             "reference_answer": "参考答案",
             "key_points": ["要点1", "要点2", "要点3"],
             "source_content": "与该问题直接相关的原文段落"
-        }
+        }}
     ]
-}
+}}
 
 JSON格式要求：
 1. 不要添加任何代码块标记（如```json）
@@ -1111,9 +1077,6 @@ JSON格式要求：
         while current_retry < max_retries:
             try:
                 response = self._call_ai_api([{
-                    "role": "system",
-                    "content": system_prompt
-                }, {
                     "role": "user",
                     "content": prompt
                 }])
