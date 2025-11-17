@@ -905,23 +905,36 @@ class AIHandler:
         self.text_chunker.chunk_size = self.default_chunk_size
 
     def _generate_custom_questions(self, content, template_id, num_questions, language="中文"):
-        """使用自定义模板生成选择题"""
+        """使用自定义模板生成卡片"""
         # 从配置中获取模板
         config = mw.addonManager.getConfig(__name__)
         templates = config.get('prompt_templates', [])
         template = next((t for t in templates if t.get('id', '') == template_id), None)
-        
+
         if not template:
             raise ValueError("找不到指定的提示词模板")
-            
+
+        # 获取卡片类型，默认为choice以兼容旧模板
+        card_type = template.get('card_type', 'choice')
+
+        # 根据卡片类型调用不同的生成方法
+        if card_type == 'choice':
+            return self._generate_custom_choice(content, template, num_questions, language)
+        elif card_type == 'knowledge_card':
+            return self._generate_custom_knowledge_card(content, template, num_questions, language)
+        elif card_type == 'essay':
+            return self._generate_custom_essay(content, template, num_questions, language)
+        else:
+            raise ValueError(f"不支持的卡片类型: {card_type}")
+
+    def _generate_custom_choice(self, content, template, num_questions, language="中文"):
+        """使用自定义模板生成选择题"""
         # 构建提示词，只替换content变量
-        prompt = template['content'].format(
-            content=content
-        )
-        
+        prompt = template['content'].format(content=content)
+
         # 在提示词末尾添加问题数量要求
         prompt += f"\n\n请生成{num_questions}道选择题。"
-        
+
         # 添加系统提示，确保返回正确的JSON格式
         system_prompt = """你是一个基于费曼学习法的高级教学助手。请根据用户提供的提示词生成选择题。
 请严格按照以下JSON格式返回，确保格式完整：
@@ -1015,7 +1028,131 @@ JSON格式要求：
                 current_retry += 1
                 continue
                 
-        raise Exception("生成问题失败，请检查提示词模板是否正确")
+        raise Exception("生成选择题失败，请检查提示词模板是否正确")
+
+    def _generate_custom_knowledge_card(self, content, template, num_questions, language="中文"):
+        """使用自定义模板生成知识卡"""
+        # 构建提示词
+        prompt = template['content'].format(content=content)
+
+        # 在提示词末尾添加卡片数量要求
+        prompt += f"\n\n请生成{num_questions}张知识卡。"
+
+        # 添加系统提示，确保返回正确的JSON格式
+        system_prompt = """你是一个基于费曼学习法的高级教学助手。请根据用户提供的提示词生成知识卡。
+请严格按照以下JSON格式返回，确保格式完整：
+
+{
+    "cards": [
+        {
+            "question": "问题内容",
+            "answer": "答案内容",
+            "context": "上下文信息"
+        }
+    ]
+}
+
+JSON格式要求：
+1. 不要添加任何代码块标记（如```json）
+2. 每张卡片必须包含question、answer、context三个字段
+3. 特别注意JSON格式中的逗号、引号等标点符号的正确使用
+4. 确保每个JSON对象和数组的开始和结束都有正确的括号"""
+
+        max_retries = 3
+        current_retry = 0
+
+        while current_retry < max_retries:
+            try:
+                response = self._call_ai_api([{
+                    "role": "system",
+                    "content": system_prompt
+                }, {
+                    "role": "user",
+                    "content": prompt
+                }])
+
+                try:
+                    result = self.response_handler.parse_and_validate(response, "knowledge_card")
+
+                    # 验证卡片数量
+                    if len(result["cards"]) < num_questions:
+                        print(f"警告：请求生成{num_questions}张卡片，但只生成了{len(result['cards'])}张")
+
+                    return result
+                except ValueError as e:
+                    print(f"JSON解析错误：{str(e)}")
+                    current_retry += 1
+                    continue
+
+            except Exception as e:
+                print(f"API调用错误：{str(e)}")
+                current_retry += 1
+                continue
+
+        raise Exception("生成知识卡失败，请检查提示词模板是否正确")
+
+    def _generate_custom_essay(self, content, template, num_questions, language="中文"):
+        """使用自定义模板生成问答题"""
+        # 构建提示词
+        prompt = template['content'].format(content=content)
+
+        # 在提示词末尾添加问题数量要求
+        prompt += f"\n\n请生成{num_questions}道问答题。"
+
+        # 添加系统提示，确保返回正确的JSON格式
+        system_prompt = """你是一个基于费曼学习法的高级教学助手。请根据用户提供的提示词生成问答题。
+请严格按照以下JSON格式返回，确保格式完整：
+
+{
+    "questions": [
+        {
+            "question": "问题内容",
+            "reference_answer": "参考答案",
+            "key_points": ["要点1", "要点2", "要点3"],
+            "source_content": "与该问题直接相关的原文段落"
+        }
+    ]
+}
+
+JSON格式要求：
+1. 不要添加任何代码块标记（如```json）
+2. 每道题必须包含question、reference_answer、key_points、source_content四个字段
+3. key_points必须是数组，至少包含3个要点
+4. 特别注意JSON格式中的逗号、引号等标点符号的正确使用
+5. 确保每个JSON对象和数组的开始和结束都有正确的括号"""
+
+        max_retries = 3
+        current_retry = 0
+
+        while current_retry < max_retries:
+            try:
+                response = self._call_ai_api([{
+                    "role": "system",
+                    "content": system_prompt
+                }, {
+                    "role": "user",
+                    "content": prompt
+                }])
+
+                try:
+                    result = self.response_handler.parse_and_validate(response, "essay_question")
+
+                    # 验证问题数量
+                    if len(result["questions"]) < num_questions:
+                        print(f"警告：请求生成{num_questions}道问题，但只生成了{len(result['questions'])}道")
+
+                    return result
+                except ValueError as e:
+                    print(f"JSON解析错误：{str(e)}")
+                    current_retry += 1
+                    continue
+
+            except Exception as e:
+                print(f"API调用错误：{str(e)}")
+                current_retry += 1
+                continue
+
+        raise Exception("生成问答题失败，请检查提示词模板是否正确")
 
     def generate_custom_questions(self, content, template_id, num_questions=3, language="中文"):
         """生成自定义问题的公共方法"""

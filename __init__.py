@@ -35,16 +35,43 @@ def show_settings():
     dialog = SettingsDialog(mw)
     dialog.exec()
 
+def migrate_templates():
+    """迁移旧版本的模板，为其添加card_type字段"""
+    try:
+        config = mw.addonManager.getConfig(__name__)
+        templates = config.get('prompt_templates', [])
+
+        if not templates:
+            return
+
+        # 检查是否需要迁移
+        needs_migration = False
+        for template in templates:
+            if 'card_type' not in template:
+                needs_migration = True
+                template['card_type'] = 'choice'  # 默认为选择题
+
+        # 如果有模板被迁移，保存配置
+        if needs_migration:
+            config['prompt_templates'] = templates
+            mw.addonManager.writeConfig(__name__, config)
+            print("已自动迁移旧版本的提示词模板，添加了card_type字段")
+    except Exception as e:
+        print(f"模板迁移失败：{str(e)}")
+
 def init_feynman():
     """初始化费曼学习插件"""
     if not mw.col:
         return
-        
+
     # 确保笔记类型已创建
     ensure_note_types()
-    
+
     # 设置文本捕获功能
     setup_text_capture()
+
+    # 迁移旧版本的模板
+    migrate_templates()
     
     # 获取当前语言
     current_lang = get_current_language()

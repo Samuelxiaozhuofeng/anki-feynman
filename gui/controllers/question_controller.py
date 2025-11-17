@@ -28,20 +28,21 @@ class QuestionController:
     def on_questions_generated(self, questions):
         """
         问题生成完成的回调
-        
+
         参数:
         questions -- 生成的问题数据
         """
         self.current_questions = questions
         self.current_question_index = 0
-        
+
         # 获取选择的追加提问模型
         selected_followup_model = self.dialog.ui.followUpModelComboBox.currentData()
 
-        # 根据问题类型创建不同的窗口
-        question_type = self.dialog.ui.questionTypeComboBox.currentText()
-        if question_type == get_message("question_type_knowledge", self.dialog.lang) or \
-           question_type == get_message("question_type_language_learning", self.dialog.lang):
+        # 根据返回数据的结构判断应该打开哪个窗口
+        # 知识卡的数据结构包含 'cards' 字段，而选择题和问答题包含 'questions' 字段
+        is_knowledge_card = isinstance(questions, dict) and 'cards' in questions
+
+        if is_knowledge_card:
             # 创建或更新知识卡窗口（知识卡和语言学习知识卡都使用同一个窗口）
             if not hasattr(self, 'knowledge_dialog') or self.knowledge_dialog is None:
                 self.knowledge_dialog = KnowledgeCardWindow(questions, parent=self.dialog)
@@ -56,14 +57,14 @@ class QuestionController:
                 self.knowledge_dialog.followup_model = selected_followup_model
                 self.knowledge_dialog.followup_panel.set_followup_model(selected_followup_model)
             self.knowledge_dialog.show()
-            
+
             # 将窗口移动到输入窗口旁边
             input_pos = self.dialog.pos()
             input_size = self.dialog.size()
             knowledge_pos = QPoint(input_pos.x() + input_size.width() + 10, input_pos.y())
             self.knowledge_dialog.move(knowledge_pos)
         else:
-            # 创建或更新答题窗口
+            # 创建或更新答题窗口（选择题和问答题）
             if not hasattr(self, 'review_dialog') or self.review_dialog is None:
                 self.review_dialog = ReviewDialog(questions=self.current_questions, parent=self.dialog, ai_handler=self.ai_handler)
             else:
@@ -72,7 +73,7 @@ class QuestionController:
 
             # 显示窗口
             self.review_dialog.show()
-            
+
             # 将窗口移动到输入窗口旁边
             input_pos = self.dialog.pos()
             input_size = self.dialog.size()

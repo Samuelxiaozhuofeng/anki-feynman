@@ -166,7 +166,7 @@ class PromptTemplateEditor(QDialog):
     def setup_ui(self):
         """设置UI界面"""
         layout = QVBoxLayout(self)
-        
+
         # 模板名称
         name_layout = QHBoxLayout()
         name_label = QLabel(get_message("template_name", self.lang))
@@ -175,7 +175,20 @@ class PromptTemplateEditor(QDialog):
         name_layout.addWidget(name_label)
         name_layout.addWidget(self.name_edit)
         layout.addLayout(name_layout)
-        
+
+        # 卡片类型选择
+        type_layout = QHBoxLayout()
+        type_label = QLabel(get_message("template_card_type", self.lang))
+        self.card_type_combo = QComboBox()
+        self.card_type_combo.addItem(get_message("template_card_type_choice", self.lang), "choice")
+        self.card_type_combo.addItem(get_message("template_card_type_knowledge", self.lang), "knowledge_card")
+        self.card_type_combo.addItem(get_message("template_card_type_essay", self.lang), "essay")
+        self.card_type_combo.currentIndexChanged.connect(self.on_card_type_changed)
+        type_layout.addWidget(type_label)
+        type_layout.addWidget(self.card_type_combo)
+        type_layout.addStretch()
+        layout.addLayout(type_layout)
+
         # 说明文本
         description = QLabel(get_message("template_editor_description", self.lang))
         description.setWordWrap(True)
@@ -238,45 +251,90 @@ class PromptTemplateEditor(QDialog):
         self.setWindowModality(Qt.WindowModality.NonModal)
         self.setWindowFlags(Qt.WindowType.Window)
         
-    def load_default_template(self):
-        """加载默认模板"""
-        self.example_content.setPlainText("""请基于以下内容设计5道关于量子力学的选择题，确保每个题目覆盖不同的概念，
+    def on_card_type_changed(self):
+        """卡片类型变更时更新示例"""
+        self.update_example_content()
+
+    def update_example_content(self):
+        """根据选择的卡片类型更新示例内容"""
+        card_type = self.card_type_combo.currentData()
+
+        if card_type == "choice":
+            example = """请基于以下内容设计选择题，确保每个题目覆盖不同的概念，
 选项要有足够的干扰性，使学生必须真正理解概念才能选对。
 每个题目都应包含一个简短的解释，说明为什么正确答案是正确的，以及其他选项为什么不正确。
-避免太简单的记忆性问题，我想要能测试深层理解的问题。""")
+避免太简单的记忆性问题，我想要能测试深层理解的问题。
+
+内容：
+{content}"""
+        elif card_type == "knowledge_card":
+            example = """请基于以下内容生成知识卡，每张卡片应该：
+1. 问题简洁明确，聚焦单一知识点
+2. 答案详细准确，便于理解和记忆
+3. 包含必要的上下文信息，帮助建立知识联系
+4. 遵循SuperMemo原则，确保卡片质量
+
+内容：
+{content}"""
+        else:  # essay
+            example = """请基于以下内容设计开放性问答题，要求：
+1. 问题能引发深度思考，而非简单复述
+2. 提供详细的参考答案
+3. 列出3-5个关键要点
+4. 标注相关的原文段落作为依据
+
+内容：
+{content}"""
+
+        self.example_content.setPlainText(example)
+
+    def load_default_template(self):
+        """加载默认模板"""
+        self.update_example_content()
         
     def load_template(self, template_id):
         """加载现有模板"""
         config = mw.addonManager.getConfig(__name__)
         templates = config.get('prompt_templates', [])
-        
+
         template = next((t for t in templates if t.get('id', '') == template_id), None)
         if template:
             self.name_edit.setText(template.get('name', ''))
             self.content_edit.setPlainText(template.get('content', ''))
+
+            # 加载卡片类型，默认为choice以兼容旧模板
+            card_type = template.get('card_type', 'choice')
+            index = self.card_type_combo.findData(card_type)
+            if index >= 0:
+                self.card_type_combo.setCurrentIndex(index)
+
+            # 更新示例内容
+            self.update_example_content()
         
     def on_save(self):
         """保存模板"""
         name = self.name_edit.text().strip()
         content = self.content_edit.toPlainText().strip()
-        
+        card_type = self.card_type_combo.currentData()
+
         if not name:
             showWarning(get_message("template_name_required", self.lang))
             return
-            
+
         if not content:
             showWarning(get_message("template_content_required", self.lang))
             return
-            
+
         config = mw.addonManager.getConfig(__name__)
         templates = config.get('prompt_templates', [])
-        
+
         if self.template_id:
             # 更新现有模板
             template = next((t for t in templates if t.get('id', '') == self.template_id), None)
             if template:
                 template['name'] = name
                 template['content'] = content
+                template['card_type'] = card_type
         else:
             # 创建新模板
             self.template_id = str(uuid.uuid4())
@@ -284,9 +342,9 @@ class PromptTemplateEditor(QDialog):
                 'id': self.template_id,
                 'name': name,
                 'content': content,
-                'type': 'choice'  # 目前仅支持选择题类型
+                'card_type': card_type
             })
-            
+
         config['prompt_templates'] = templates
         mw.addonManager.writeConfig(__name__, config)
-        self.accept() 
+        self.accept()
