@@ -330,31 +330,15 @@ class AIHandler:
         is_claude_model = "claude" in model_name.lower()
         
         # 如果题目数量较多，增加系统提示的强调
-        system_prompt = get_choice_questions_prompt()
-        
-        # 为Claude模型添加更严格的格式要求
+        system_prompt = get_choice_questions_prompt()        # 为Claude模型添加简要的格式要求
         if is_claude_model:
             system_prompt += """
 
-请注意，你正在使用Claude模型。必须特别注意以下几点：
-1. 响应必须是严格的JSON格式，不得包含任何前导或尾随文本
-2. 不要使用Markdown代码块，直接返回JSON
-3. 所有字符串必须使用双引号
-4. 每个属性后必须有逗号，除了最后一个属性
-5. 确保生成的JSON可以被标准JSON解析器直接解析
-6. 生成的JSON结构必须完全符合以下格式：
-
-{
-    "questions": [
-        {
-            "question": "问题内容",
-            "options": ["A. 选项1", "B. 选项2", "C. 选项3", "D. 选项4"],
-            "correct_answer": "A/B/C/D其中之一",
-            "explanation": "解释",
-            "source_content": "相关段落"
-        }
-    ]
-}"""
+注意：当前使用 Claude 模型。
+1. 直接返回一个有效的 JSON 对象，不要在前后添加说明文字
+2. 不要使用任何 Markdown 代码块（例如 ```json）
+3. 所有字符串必须使用双引号，保证 JSON 可以被严格解析
+"""
         elif num_questions > 5:
             system_prompt += "\n\n特别注意：你正在生成较多数量的题目，请特别注意JSON格式的正确性，确保每个问题对象之间有逗号分隔，所有属性名和字符串值都用双引号包围，每个属性后面都有逗号（除了最后一个）。"
         
