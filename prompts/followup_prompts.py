@@ -3,12 +3,13 @@
 """
 
 from typing import Dict, Any
+from .common import ROLE_FEYNMAN_ASSISTANT, FEYNMAN_PRINCIPLES_BRIEF
 
 # 追问处理系统提示
-FOLLOWUP_SYSTEM_PROMPT = """你是一个基于费曼学习法的AI助手，专注于通过简单、清晰的方式解释复杂概念。"""
+FOLLOWUP_SYSTEM_PROMPT = f"""{ROLE_FEYNMAN_ASSISTANT}，专注于通过简单、清晰的方式解释复杂概念。"""
 
 # 追问处理提示模板
-FOLLOWUP_PROMPT = """作为一个基于费曼学习法的AI助手，请根据以下信息回答用户的追问。
+FOLLOWUP_PROMPT = """作为{role_assistant}，请根据以下信息回答用户的追问。
 
 原始问题：{original_question}
 
@@ -27,10 +28,9 @@ AI解析历史：
 用户追问：
 {follow_up_question}
 
-请提供详细、准确、易于理解的解答，运用费曼学习法的原则：
-1. 使用简单、清晰的语言
-2. 通过类比和实例来解释复杂概念
-3. 确保解释逻辑连贯，层次分明
+请提供详细、准确、易于理解的解答。
+
+{feynman_principles}
 4. 指出与原始问题的关联
 5. 如有必要，纠正可能的误解
 
@@ -76,15 +76,17 @@ def get_followup_messages(context: Dict[str, Any], language: str = "中文") -> 
     
     # 添加语言指示
     language_instruction = f"请使用{language}回答追问内容。\n\n"
-    
+
     # 生成提示内容
     prompt = language_instruction + FOLLOWUP_PROMPT.format(
+        role_assistant=ROLE_FEYNMAN_ASSISTANT,
         original_question=context['original_question'],
         source_content=context['source_content'],
         user_answer=context['user_answer'],
         ai_feedback=context['ai_feedback'],
         history=formatted_history,
-        follow_up_question=context['follow_up_question']
+        follow_up_question=context['follow_up_question'],
+        feynman_principles=FEYNMAN_PRINCIPLES_BRIEF
     )
     
     return [

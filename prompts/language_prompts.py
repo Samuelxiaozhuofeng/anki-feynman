@@ -1,5 +1,15 @@
 """语言学习提示配置文件"""
 
+from .common import ROLE_FEYNMAN_ASSISTANT
+
+# JSON格式要求（用于语言模式练习）
+LANGUAGE_PATTERN_JSON_FORMAT = """
+请确保输出的JSON格式正确，包含以下字段：
+1. analysis: 句型分析内容
+2. replaceable_parts: 可替换部分的说明
+3. examples: 包含例句的数组，每个例句对象包含sentence(句子)、translation(翻译)、grammar_note(语法笔记，可选)和replaced_part(替换部分标识)字段
+"""
+
 def get_language_pattern_system_prompt(target_language="日语", language_level=None):
     """获取语言模式练习的系统提示
     
@@ -88,10 +98,7 @@ def get_language_pattern_system_prompt(target_language="日语", language_level=
 - 教学语言使用中文
 - 严格遵循每次只替换一个部分的原则，其他部分保持原样
 
-请确保输出的JSON格式正确，包含以下字段：
-1. analysis: 句型分析内容
-2. replaceable_parts: 可替换部分的说明
-3. examples: 包含例句的数组，每个例句对象包含sentence(句子)、translation(翻译)、grammar_note(语法笔记，可选)和replaced_part(替换部分标识)字段
+{LANGUAGE_PATTERN_JSON_FORMAT}
 """
         return base_prompt
     else:
@@ -125,10 +132,7 @@ def get_language_pattern_system_prompt(target_language="日语", language_level=
 - 教学语言使用中文
 - 严格遵循每次只替换一个部分的原则，其他部分保持原样
 
-请确保输出的JSON格式正确，包含以下字段：
-1. analysis: 句型分析内容
-2. replaceable_parts: 可替换部分的说明
-3. examples: 包含例句的数组，每个例句对象包含sentence(句子)、translation(翻译)、grammar_note(语法笔记，可选)和replaced_part(替换部分标识)字段
+{LANGUAGE_PATTERN_JSON_FORMAT}
 """
         return base_prompt
 

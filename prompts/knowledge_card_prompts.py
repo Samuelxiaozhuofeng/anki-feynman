@@ -3,10 +3,16 @@
 """
 
 from typing import Dict, Any
+from .common import (
+    ROLE_EDUCATOR,
+    ROLE_LANGUAGE_EXPERT,
+    SUPERMEMO_PRINCIPLES,
+    format_with_language
+)
 
 # 语言学习知识卡提示模板
 LANGUAGE_LEARNING_CARD_PROMPT = """
-你是一个专业的语言学习卡片制作助手。请分析用户的语言学习材料，智能识别材料类型，并从中提取重要的学习要点，制作成知识卡片。
+{role_description}请分析用户的语言学习材料，智能识别材料类型，并从中提取重要的学习要点，制作成知识卡片。
 
 ## 第一步：识别材料类型
 
@@ -59,17 +65,15 @@ LANGUAGE_LEARNING_CARD_PROMPT = """
 ## 输出格式
 
 输出为JSON格式，包含cards数组：
-```json
-{{
+{{{{
   "cards": [
-    {{
+    {{{{
       "question": "清晰的问题",
       "answer": "简洁的答案和解释",
       "context": "相关上下文和例句"
-    }}
+    }}}}
   ]
-}}
-```
+}}}}
 
 ## 示例
 
@@ -96,36 +100,9 @@ LANGUAGE_LEARNING_CARD_PROMPT = """
 确保每张卡片聚焦一个明确的知识点，问题清晰，答案实用。
 """
 
-# SuperMemo制卡原则
-SUPERMEMO_PRINCIPLES = """
-1. 信息最小化原则：
-   - 每张卡片只包含一个基本概念
-   - 避免复杂的、多重的问题
-   - 确保问题的独立性和完整性
-   - 答案应该只包含一个关键的事实/名称/概念/术语
-
-2. 语言表达原则：
-   - 使用清晰简洁的语言
-   - 避免使用模糊或歧义的词语
-   - 问题必须具体且不含糊
-   - 优先使用简单直接的表达方式
-
-3. 内容处理原则：
-   - 将复杂内容分解为独立的知识点
-   - 对超过15个字的内容进行拆分和概括
-   - 保持概念的完整性
-   - 确保知识点的逻辑连贯性
-
-4. 制卡流程原则：
-   - 第一步：使用简单的语言改写原内容
-   - 第二步：将内容分成独立的知识点
-   - 第三步：基于知识点生成抽认卡
-   - 第四步：检查并优化卡片质量
-"""
-
 # 基础问答卡提示模板
 BASIC_CARD_PROMPT = """
-你是一个专业的知识卡制作助手。请基于以下制卡原则，将输入的文本转换为高质量的知识卡：
+{role_description}请基于以下制卡原则，将输入的文本转换为高质量的知识卡：
 
 {supermemo_principles}
 
@@ -162,7 +139,7 @@ BASIC_CARD_PROMPT = """
 
 # 填空卡提示模板
 CLOZE_CARD_PROMPT = """
-你是一个专业的填空卡制作助手。请基于以下SuperMemo制卡原则，将输入的文本转换为高质量的填空卡：
+{role_description}请基于以下SuperMemo制卡原则，将输入的文本转换为高质量的填空卡：
 
 {supermemo_principles}
 
@@ -194,27 +171,40 @@ def get_prompt_config(prompt_type: str = "basic") -> Dict[str, Any]:
     base_config = {
         "temperature": 0.7,
         "max_tokens": 2000,
-        "supermemo_principles": SUPERMEMO_PRINCIPLES,
     }
 
     if prompt_type == "basic":
         return {
             **base_config,
-            "template": BASIC_CARD_PROMPT,
+            "template": BASIC_CARD_PROMPT.format(
+                role_description=ROLE_EDUCATOR + "。",
+                supermemo_principles="{supermemo_principles}",
+                input_text="{input_text}",
+                num_cards="{num_cards}"
+            ),
             "type": "basic",
             "description": "基础问答卡生成器"
         }
     elif prompt_type == "cloze":
         return {
             **base_config,
-            "template": CLOZE_CARD_PROMPT,
+            "template": CLOZE_CARD_PROMPT.format(
+                role_description=ROLE_EDUCATOR + "。",
+                supermemo_principles="{supermemo_principles}",
+                input_text="{input_text}",
+                num_cards="{num_cards}"
+            ),
             "type": "cloze",
             "description": "填空卡生成器"
         }
     elif prompt_type == "language_learning":
         return {
             **base_config,
-            "template": LANGUAGE_LEARNING_CARD_PROMPT,
+            "template": LANGUAGE_LEARNING_CARD_PROMPT.format(
+                role_description=ROLE_LANGUAGE_EXPERT + "。",
+                input_text="{input_text}",
+                num_cards="{num_cards}"
+            ),
             "type": "language_learning",
             "description": "语言学习知识卡生成器"
         }
@@ -234,20 +224,23 @@ def format_prompt(prompt_type: str, input_text: str, num_cards: int = 3, languag
     Returns:
         格式化后的提示文本
     """
-    # 添加语言指示
-    language_instruction = f"请使用{language}生成所有知识卡的问题、答案和上下文。\n\n"
-    
     config = get_prompt_config(prompt_type)
-    
+
     # 对于语言学习类型，不需要supermemo_principles
     if prompt_type == "language_learning":
-        return language_instruction + config["template"].format(
+        return format_with_language(
+            config["template"],
+            language,
+            "知识卡的问题、答案和上下文",
             input_text=input_text,
             num_cards=num_cards
         )
     else:
-        return language_instruction + config["template"].format(
+        return format_with_language(
+            config["template"],
+            language,
+            "知识卡的问题、答案和上下文",
             supermemo_principles=SUPERMEMO_PRINCIPLES,
             input_text=input_text,
             num_cards=num_cards
-        ) 
+        )

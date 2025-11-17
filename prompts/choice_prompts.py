@@ -3,10 +3,16 @@
 """
 
 from typing import Dict, Any
+from .common import (
+    ROLE_LEARNING_STRATEGIST,
+    ROLE_FEYNMAN_ASSISTANT,
+    JSON_FORMAT_DETAILED,
+    format_with_language
+)
 
 # 选择题生成提示模板
-CHOICE_QUESTION_PROMPT = """## 核心目标 (Core Goal) 
-你是一名顶级的学习策略师，专注于从非虚构类文本（non-fiction）中挖掘核心思想。你是一个基于费曼学习法的高级教学助手。请根据以下学习材料生成 {num_questions} 道选择题，旨在深入测试学习者对概念的理解和应用能力。你的问题不应纠结于文本的表面信息，而应聚焦于以下两点： 
+CHOICE_QUESTION_PROMPT = """## 核心目标 (Core Goal)
+{role_description}请根据以下学习材料生成 {{num_questions}} 道选择题，旨在深入测试学习者对概念的理解和应用能力。你的问题不应纠结于文本的表面信息，而应聚焦于以下两点：
 
 **模式提炼 (Pattern Extraction)**: 引导用户思考文本背后隐藏的、可复用的思维模型、框架或普遍规律。  
 **实践应用 (Practical Application)**: 引导用户思考如何将文本的核心观点应用于解决真实世界的问题。  
@@ -35,9 +41,9 @@ CHOICE_QUESTION_PROMPT = """## 核心目标 (Core Goal)
 
 请严格按照以下JSON格式返回，确保格式完整：
 
-{{
+{{{{
     "questions": [
-        {{
+        {{{{
             "question": "问题内容",
             "options": [
                 "A. 选项1",
@@ -48,21 +54,15 @@ CHOICE_QUESTION_PROMPT = """## 核心目标 (Core Goal)
             "correct_answer": "A/B/C/D其中之一",
             "explanation": "解释为什么这是正确答案",
             "source_content": "与该问题直接相关的原文段落（不要包含无关内容）"
-        }}
+        }}}}
     ]
-}}
+}}}}
 
-JSON格式要求（非常重要）：
-1. 不要添加任何代码块标记（如```json）
-2. 选项必须包含A、B、C、D前缀
-3. source_content必须是原文中与问题直接相关的段落
-4. 特别注意JSON格式中的逗号、引号等标点符号的正确使用
-5. 确保每个JSON对象和数组的开始和结束都有正确的括号
-6. 每个属性后面都必须有逗号，除了最后一个属性
-7. 所有字符串必须用双引号包围，不能用单引号
-8. 当生成多个问题时，每个问题对象之间必须用逗号分隔
-9. 检查生成的JSON是否完整，特别是在生成大量题目时
-10. 确保每个问题对象的所有字段都正确闭合
+特别注意：
+1. 选项必须包含A、B、C、D前缀
+2. source_content必须是原文中与问题直接相关的段落
+
+{json_requirements}
 
 内容：
 {content}
@@ -80,10 +80,19 @@ def get_choice_prompt(content: str, num_questions: int = 3, language: str = "中
     Returns:
         格式化后的提示文本
     """
-    # 添加语言指示
-    language_instruction = f"请使用{language}生成所有问题、选项、解释和答案。\n\n"
-    
-    return language_instruction + CHOICE_QUESTION_PROMPT.format(
+    # 使用公共函数添加语言指示和格式化
+    role_desc = f"{ROLE_LEARNING_STRATEGIST}。{ROLE_FEYNMAN_ASSISTANT}。"
+    prompt_template = CHOICE_QUESTION_PROMPT.format(
+        role_description=role_desc,
+        json_requirements=JSON_FORMAT_DETAILED,
+        content="{content}",
+        num_questions="{num_questions}"
+    )
+
+    return format_with_language(
+        prompt_template,
+        language,
+        "问题、选项、解释和答案",
         content=content,
         num_questions=num_questions
-    ) 
+    )

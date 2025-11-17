@@ -3,18 +3,23 @@
 """
 
 from typing import Dict, Any
+from .common import (
+    ROLE_FEYNMAN_ASSISTANT,
+    JSON_FORMAT_DETAILED,
+    format_with_language
+)
 
 # 问答题生成提示模板
-ESSAY_QUESTION_PROMPT = """你是一个基于费曼学习法的教学助手。请根据以下内容生成{num_questions}道问答题。
+ESSAY_QUESTION_PROMPT = """{role_description}请根据以下内容生成{num_questions}道问答题。
 要求：
 1. 问题应该促进深度思考和理解
 2. 帮助学习者用自己的话解释概念
 3. 对于每个问题，必须从原文中提取与该问题直接相关的段落
 4. 必须严格按照以下JSON格式返回，不要添加任何其他标记：
 
-{{
+{{{{
     "questions": [
-        {{
+        {{{{
             "question": "问题内容",
             "reference_answer": "参考答案",
             "key_points": [
@@ -23,23 +28,16 @@ ESSAY_QUESTION_PROMPT = """你是一个基于费曼学习法的教学助手。�
                 "关键点3"
             ],
             "source_content": "与该问题直接相关的原文段落（不要包含无关内容）"
-        }}
+        }}}}
     ]
-}}
+}}}}
 
-JSON格式要求（非常重要）：
-1. 返回的必须是合法的JSON格式
-2. 不要添加任何代码块标记（如```json）
-3. 每个问题至少包含3个关键点
-4. 参考答案应该完整覆盖所有关键点
-5. source_content必须是原文中与问题直接相关的段落，不要包含无关内容
-6. 特别注意JSON格式中的逗号、引号等标点符号的正确使用
-7. 确保每个JSON对象和数组的开始和结束都有正确的括号
-8. 每个属性后面都必须有逗号，除了最后一个属性
-9. 所有字符串必须用双引号包围，不能用单引号
-10. 当生成多个问题时，每个问题对象之间必须用逗号分隔
-11. 检查生成的JSON是否完整，特别是在生成大量题目时
-12. 确保每个问题对象的所有字段都正确闭合
+特别注意：
+1. 每个问题至少包含3个关键点
+2. 参考答案应该完整覆盖所有关键点
+3. source_content必须是原文中与问题直接相关的段落，不要包含无关内容
+
+{json_requirements}
 
 内容：
 {content}
@@ -57,10 +55,18 @@ def get_essay_prompt(content: str, num_questions: int = 3, language: str = "中�
     Returns:
         格式化后的提示文本
     """
-    # 添加语言指示
-    language_instruction = f"请使用{language}生成所有问题、参考答案、关键点和源内容。\n\n"
-    
-    return language_instruction + ESSAY_QUESTION_PROMPT.format(
+    # 使用公共函数添加语言指示和格式化
+    prompt_template = ESSAY_QUESTION_PROMPT.format(
+        role_description=ROLE_FEYNMAN_ASSISTANT + "。",
+        json_requirements=JSON_FORMAT_DETAILED,
+        content="{content}",
+        num_questions="{num_questions}"
+    )
+
+    return format_with_language(
+        prompt_template,
+        language,
+        "问题、参考答案、关键点和源内容",
         content=content,
         num_questions=num_questions
-    ) 
+    )
