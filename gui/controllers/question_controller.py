@@ -23,7 +23,9 @@ class QuestionController:
         self.current_question_index = 0
         self.review_dialog = None
         self.knowledge_dialog = None
-        self.ai_handler = AIHandler()
+        # ��ʼ��ʱ����ʱ������AI������ʵ�����Ա��ڳ�ʼ�������޷����д���
+        # �ڼ�������ʱ���ٽ���ʼ��AI������
+        self.ai_handler = None
         
     def on_questions_generated(self, questions):
         """

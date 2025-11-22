@@ -163,7 +163,16 @@ class InputEventsController:
             self.thread.start()
 
         except Exception as e:
-            self.question_controller.on_generation_error(str(e))
+            # �ض���AIδ�������쳣��ʾ���ʾ
+            msg = str(e)
+            lower_msg = msg.lower()
+            if "openai api key" in lower_msg or "api key" in lower_msg:
+                showWarning("请先在settings中配置AI")
+                if hasattr(self.dialog.ui, 'progressBar'):
+                    self.dialog.ui.progressBar.setVisible(False)
+                self.dialog.ui.generateButton.setEnabled(True)
+            else:
+                self.question_controller.on_generation_error(msg)
             
     def on_content_changed(self):
         """内容变化事件"""
@@ -362,7 +371,16 @@ class InputEventsController:
             self.thread.start()
 
         except Exception as e:
-            self.question_controller.on_generation_error(str(e))
+            # �ض���AIδ�������쳣��ʾ���ʾ
+            msg = str(e)
+            lower_msg = msg.lower()
+            if "openai api key" in lower_msg or "api key" in lower_msg:
+                showWarning("请先在settings中配置AI")
+                if hasattr(self.dialog.ui, 'progressBar'):
+                    self.dialog.ui.progressBar.setVisible(False)
+                self.dialog.ui.generateButton.setEnabled(True)
+            else:
+                self.question_controller.on_generation_error(msg)
     
     def on_generation_progress(self, current, total, message):
         """
